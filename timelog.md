@@ -23,3 +23,4 @@
 ### Wednesday 20/9/2023 
 * *.5 hour* Read a Short History of Nomograms and tables used for thermal radiation calculations 
 * *1 hour* Read Visualising statistical models using dynamic nomograms.
+
