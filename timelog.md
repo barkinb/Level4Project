@@ -24,3 +24,11 @@
 * *.5 hour* Read a Short History of Nomograms and tables used for thermal radiation calculations 
 * *1 hour* Read Visualising statistical models using dynamic nomograms.
 
+### Thursday 
+* *2 hours* Lecture about the individual project
+* *2 hours* on reading about an interactive tool about interactive nomograms as above
+
+### Sunday
+* *3 hours* reading about "The History and Development of Nomograms
+
+  
