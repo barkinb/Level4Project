@@ -29,6 +29,8 @@
 * *2 hours* on reading about an interactive tool about interactive nomograms as above
 
 ### Sunday
-* *3 hours* reading about "The History and Development of Nomograms
+* *3 hours* reading about different mathematical techniques in nomograms (matrices, trigonometry, etc. 
 
-  
+## Week 2 25 Sept
+* *1 hours* Finish reading Blood Dirt and Nomograms 
+* *1.5 hrs* Watch a talk about Bayes, nomograms and medical practices and applications 
