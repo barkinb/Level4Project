@@ -32,5 +32,7 @@
 * *3 hours* reading about different mathematical techniques in nomograms (matrices, trigonometry, etc. 
 
 ## Week 2 25 Sept
+
+### Monday 
 * *1 hours* Finish reading Blood Dirt and Nomograms 
 * *1.5 hrs* Watch a talk about Bayes, nomograms and medical practices and applications 
