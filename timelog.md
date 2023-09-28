@@ -35,4 +35,11 @@
 
 ### Monday 
 * *1 hours* Finish reading Blood Dirt and Nomograms 
-* *1.5 hrs* Watch a talk about Bayes, nomograms and medical practices and applications 
+* *1.5 hrs* Watch a talk about Bayes, nomograms and medical practices and applications
+
+### Tuesday 
+
+### Thursday 
+
+* *1 hr* Create timeline
+* *1 hr* Create the presentation for the weekly meeting
