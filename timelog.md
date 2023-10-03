@@ -43,3 +43,8 @@
 
 * *1 hr* Create timeline
 * *1 hr* Create the presentation for the weekly meeting
+
+### Friday 
+
+* *.5 hour* Supervisor meeting
+* *1 hr* taking minutes
