@@ -48,3 +48,11 @@
 
 * *.5 hour* Supervisor meeting
 * *1 hr* taking minutes
+
+## Week 3 
+
+### Tuesday 
+* *2 hours* PyMC bayesian analysis
+
+### Wednesday 
+* *2 hrs* Pynomo documentation and testing
