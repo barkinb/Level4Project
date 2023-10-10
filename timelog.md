@@ -56,3 +56,9 @@
 
 ### Wednesday 
 * *2 hrs* Pynomo documentation and testing
+### Friday 
+* *1 hrs* meeting and notes
+
+## Week 4
+### Tuesday 
+* *2 hrs* Setting up the github repo on my laptop, building the venv, converting Pynomo tp python version 3
