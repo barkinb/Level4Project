@@ -37,7 +37,6 @@
 * *1 hours* Finish reading Blood Dirt and Nomograms 
 * *1.5 hrs* Watch a talk about Bayes, nomograms and medical practices and applications
 
-### Tuesday 
 
 ### Thursday 
 
@@ -62,3 +61,4 @@
 ## Week 4
 ### Tuesday 
 * *2 hrs* Setting up the github repo on my laptop, building the venv, converting Pynomo tp python version 3
+* *2 hrs* Designing the interface
