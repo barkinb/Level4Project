@@ -4,61 +4,83 @@
 * Barkin Bryce
 * 2452842b
 * Dr John Williamson 
+## Guidance
+
+* This file contains the time log for your project. It will be submitted along with your final dissertation.
+* **YOU MUST KEEP THIS UP TO DATE AND UNDER VERSION CONTROL.**
+* This timelog should be filled out honestly, regularly (daily) and accurately. It is for *your* benefit.
+* Follow the structure provided, grouping time by weeks.  Quantise time to the half hour.
 
 ## Week 0 11-17 Sept 2023
-### Sunday 17/9/2023 
+### 17/9/2023 
 
 * *2 hours* Read the project guidance 
 * *1 hour* Read the standard contract 
 * *2 hours* Research nomograms, applications, uses 
 ## Week 1 18-24 Sept 2023 
-### Monday 18/9/2023
+### 18/9/2023
 
 * *1 hour* Initial supervisor meeting
 * *2 hours* Read Statistical rethinking 
 
-### Tuesday 19/9/2023 
+### 19/9/2023 
 * *1 hour* Read Blood, Dirt and Nomograms about the history of nomograms 
 
-### Wednesday 20/9/2023 
+### 20/9/2023 
 * *.5 hour* Read a Short History of Nomograms and tables used for thermal radiation calculations 
 * *1 hour* Read Visualising statistical models using dynamic nomograms.
 
-### Thursday 
+### 21/9/2023 
 * *2 hours* Lecture about the individual project
 * *2 hours* on reading about an interactive tool about interactive nomograms as above
 
-### Sunday
+### 22/9/2023
+
+### 23/9/2023 
+
+### 24/9/2023 
 * *3 hours* reading about different mathematical techniques in nomograms (matrices, trigonometry, etc. 
 
 ## Week 2 25 Sept
 
-### Monday 
+### 25/09/2023 
 * *1 hours* Finish reading Blood Dirt and Nomograms 
 * *1.5 hrs* Watch a talk about Bayes, nomograms and medical practices and applications
 
-
-### Thursday 
+### 28/09/2023
 
 * *1 hr* Create timeline
-* *1 hr* Create the presentation for the weekly meeting
+* *1 hr* Create the presentation for the weekly meeting and the gantt chart
 
-### Friday 
+### 29/09/2023
 
 * *.5 hour* Supervisor meeting
 * *1 hr* taking minutes
 
 ## Week 3 
 
-### Tuesday 
+### 03/10/2023
 * *2 hours* PyMC bayesian analysis
 
-### Wednesday 
+### 04/10/2023
 * *2 hrs* Pynomo documentation and testing
-### Friday 
+### 06/10/2023
 * *1 hrs* meeting and notes
 
+
 ## Week 4
-### Tuesday 
+### 11/10/2023
 * *2 hrs* Setting up the github repo on my laptop, building the venv, converting Pynomo tp python version 3
 * *2 hrs* Designing the interface
+### 12/10/2023 
+* *2 hrs* Reading through the pynomo notes
+### 13/10/2023 
+* *1 hr* meeting with my supervisor
+### 14/10/2023
+* *3 hrs* Reading the pynomo code
+
+### 15/10/2023
+* *3 hrs* Reading the pynomo code
+## Week 5
+### 16/10/2023
+### 17/10/2023
