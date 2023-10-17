@@ -11,17 +11,13 @@ instructions to run automated tests.
 
 List the all of the pre-requisites software required to set up your project (e.g. compilers, packages, libraries, OS, hardware)
 
-For example:
 
-* Python 3.7
+
+* Python 3
+* TeX/LaTeX distribution e.g. MiKTeX (www.miktex.org), teTeX (http://www.tug.org/tetex/)
 * Packages: listed in `requirements.txt` 
-* Tested on Windows 10
+* Tested on macOS
 
-or another example:
-
-* Requires Raspberry Pi 3 
-* a Linux host machine with the `arm-none-eabi` toolchain (at least version `x.xx`) installed
-* a working LuaJIT installation > 2.1.0
 
 ### Build steps
 

@@ -1,19 +1,24 @@
 # Plan
 
-* PROJECT TITLE
-* YOUR NAME
-* STUDENT ID
-* SUPERVISOR NAME
+* Probabilistic nomograms
+* Barkin Bryce
+* 2452842
+* Dr John Williamson
 
 Week-by-week plan for the whole project. Update this as you go along.
 
 ## Winter semester
 
 * **Week 1**
+Literature review about nomograms
 * **Week 2**
+Literature review about nomograms and learning about statistical methods
 * **Week 3**
+Learning about existing software and what to do
 * **Week 4**
+User interface design and prototyping
 * **Week 5**
+Working on pynomo 
 * **Week 6**
 * **Week 7**
 * **Week 8**

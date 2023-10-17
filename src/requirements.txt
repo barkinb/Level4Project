@@ -1,0 +1,7 @@
+Pipenv==2023.10.3
+Numpy==1.25.0
+Scipy==1.11.3
+PILLOW==10.1.0
+PyX==0.16.0
+iPyCanvas==0.13.1
+PyMC==4.0.0
