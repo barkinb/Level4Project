@@ -1,5 +1,7 @@
+# -*- encoding: utf-8 -*-
+#
 #    PyNomo - nomographs with Python
-#    Copyright (C) 2007  Leif Roschier
+#    Copyright (C) 2007- 2020  Leif Roschier
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -19,16 +21,27 @@ Pynomo is a program to create (pdf) nomographs (nomograms)
 using Python interpreter. A nomograph (nomogram) is a graphical
 solution to an equation.
 """
-from distutils.core import setup
+# example from: https://github.com/pypa/sampleproject/blob/master/setup.py
+from setuptools import setup, find_packages
+from codecs import open
+from os import path
+
+here = path.abspath(path.dirname(__file__))
+
+# Get the long description from the README file
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(name='PyNomo',
-      version='0.2.2',
+      version='0.3.4',
       description='PyNomo - Python Nomograms',
+      long_description=long_description,
       author='Leif Roschier',
-      author_email='lefakkomies@users.sourceforge.net',
+      author_email='leif.roschier@iki.fi',
       url='http://pynomo.org/',
-      download_url='http://sourceforge.net/project/showfiles.php?group_id=201522',
+      download_url='https://github.com/lefakkomies/pynomo',
       packages=['pynomo'],
-      license='GPL-3',
+      license='GPL',
       platforms='OS Independent',
       classifiers=[
           'Development Status :: 4 - Beta',
@@ -37,5 +50,8 @@ setup(name='PyNomo',
           'Topic :: Software Development :: Libraries :: Python Modules',
           'License :: OSI Approved :: GNU General Public License (GPL)',
           'Programming Language :: Python',
-          ],
+      ],
+      keywords='nomograph nomogram graphics calculator visualization',
+      # install numpy, scipy, pyx and latex manually :(
+      #install_requires=['numpy', 'scipy'],  # have to install pyx and tex/latex manually
       )

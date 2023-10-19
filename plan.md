@@ -16,9 +16,9 @@ Literature review about nomograms and learning about statistical methods
 * **Week 3**
 Learning about existing software and what to do
 * **Week 4**
-User interface design and prototyping
+User interface design, design prototyping, requirements consideration 
 * **Week 5**
-Working on pynomo 
+Working on pynomo to understand how to implement the program
 * **Week 6**
 * **Week 7**
 * **Week 8**

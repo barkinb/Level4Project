@@ -83,4 +83,10 @@
 * *3 hrs* Reading the pynomo code
 ## Week 5
 ### 16/10/2023
+
+* *2 hrs* tkinter and customtkinter learning and evaluation 
 ### 17/10/2023
+
+### 18/10/2023
+
+### 19/10/2023

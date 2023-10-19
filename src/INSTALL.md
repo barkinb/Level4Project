@@ -6,12 +6,5 @@ Prerequisites
 	
 
 	TeX/LaTeX distribution e.g. MiKTeX (www.miktex.org), teTeX (http://www.tug.org/tetex/)
-    Pipenv
-	Numpy
-	Scipy
-    PILLOW 
-    PyX (Python graphics package)
-    iPyCanvas
-    PyMC
-
+    Python packages in the requirements.txt
     
