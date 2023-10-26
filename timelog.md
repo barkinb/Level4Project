@@ -86,7 +86,22 @@
 
 * *2 hrs* tkinter and customtkinter learning and evaluation 
 ### 17/10/2023
-
+* *4 hrs* debugging and trying to understand how the examples lead to nomograph creation 
 ### 18/10/2023
 
 ### 19/10/2023
+* *.5 hrs* refactoring for new pynomo version 
+
+### 20/10/2023 
+* *.5 hrs* supervisor meeting 
+
+## Week 6
+### 24/10/2023
+* *8 hrs* further attempts to extract the graph data, *no progress* 
+
+### 25/10/2023 
+* *2 hrs* using at other nomogram creating software like newgrams and Janomo
+  * *2 hrs* Designing the tkinter view with the file importer and tools 
+
+### 28/10/2023 
+* *2.5 hrs* OpenCV axis detection
