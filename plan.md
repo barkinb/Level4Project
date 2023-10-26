@@ -20,7 +20,8 @@ User interface design, design prototyping, requirements consideration
 * **Week 5**
 Working on pynomo to understand how to implement the program
 * **Week 6**
-* **Week 7**
+Same as week 5
+* **Week 7** Edge detection, statistical models, 
 * **Week 8**
 * **Week 9**
 * **Week 10**

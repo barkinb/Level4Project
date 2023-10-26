@@ -9,12 +9,8 @@ instructions to run automated tests.
 
 ### Requirements
 
-List the all of the pre-requisites software required to set up your project (e.g. compilers, packages, libraries, OS, hardware)
-
-
 
 * Python 3
-* TeX/LaTeX distribution e.g. MiKTeX (www.miktex.org), teTeX (http://www.tug.org/tetex/)
 * Packages: listed in `requirements.txt` 
 * Tested on macOS
 
