@@ -101,7 +101,15 @@
 
 ### 25/10/2023 
 * *2 hrs* using at other nomogram creating software like newgrams and Janomo
-  * *2 hrs* Designing the tkinter view with the file importer and tools 
+* *2 hrs* Designing the tkinter view with the file importer and tools 
 
-### 28/10/2023 
+### 26/10/2023 
 * *2.5 hrs* OpenCV axis detection
+
+### 27/10/2023 
+* *1 hr* Supervisor meeting and taking notes*
+
+## Week 7
+### 01/11/2023
+* *2 hrs* Refactoring UI creation
+* *4 hrs* Self drawing contours and lines and other UI improvements 
