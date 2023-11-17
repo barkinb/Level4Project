@@ -24,8 +24,8 @@ Same as week 5
 * **Week 7** Edge detection, statistical models, 
 * **Week 8** Edge detection
 * **Week 9** Implement bezier curves 
-* **Week 10** 
-* **Week 11 [PROJECT WEEK]**
+* **Week 10** Add statistical distributions onto the axis
+* **Week 11 [PROJECT WEEK]** To be determined in week 10 
 * **Week 12 [PROJECT WEEK]** Status report submitted.
 
 ## Winter break
