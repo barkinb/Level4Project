@@ -22,9 +22,9 @@ Working on pynomo to understand how to implement the program
 * **Week 6**
 Same as week 5
 * **Week 7** Edge detection, statistical models, 
-* **Week 8**
-* **Week 9**
-* **Week 10**
+* **Week 8** Edge detection
+* **Week 9** Implement bezier curves 
+* **Week 10** 
 * **Week 11 [PROJECT WEEK]**
 * **Week 12 [PROJECT WEEK]** Status report submitted.
 
