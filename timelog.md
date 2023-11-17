@@ -113,3 +113,29 @@
 ### 01/11/2023
 * *2 hrs* Refactoring UI creation
 * *4 hrs* Self drawing contours and lines and other UI improvements 
+* *2 hrs* trying to fix the order of the UI operation
+
+### 02/11/2023 
+* *2 hrs* code refactoring 
+
+## Week 8 
+### 07/11/2023
+* *2 hrs* creating a toolbar (doesn't show icons)
+
+### 09/11/2023
+* *3 hrs* fixing toolbar icons 
+* *3 hrs* lasso selection
+
+### 10/11/2023/
+
+* *.5 hrs* supervisor meeting 
+
+## Week 9 
+
+### 14/11/2023
+* *2 hrs* Trying to fix contour drawings no progress 
+### 15/11/2023 
+* *.5 hrs* watched a video on Bezier curves 
+* *1 hr* looking at Computer Aided Graphic Design for bezier curves 
+### 16/11/2023
+* *3 hrs* Trying to fix contour selection no progress 

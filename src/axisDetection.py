@@ -1,171 +1,179 @@
 import tkinter as tk
-import cv2
 from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
+import cv2
 import numpy as np
+
 
 class Nomogram:
     def __init__(self):
+        self.thresholded_image = None
+        self.thresholded_value = None
+        self.hierarchy = None
+        self.width = None
+        self.height = None
         self.gray = None
         self.img = None
         self.contours = None
-        self.axis_contours = None
-        self.edges = None
-        self.blurred = None
 
-    def load_image(self, path):
+    def set_attributes(self, path):
         self.img = cv2.imread(path, -1)
         self.gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-        self.blurred = cv2.GaussianBlur(self.gray, (5, 5), 0)
-        self.edges = cv2.Canny(self.blurred, 50, 150)
-        self.contours, _ = cv2.findContours(self.edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        self.axis_contours = [contour for contour in self.contours if cv2.contourArea(contour) > 100]
+        self.thresholded_value, self.thresholded_image = cv2.threshold(self.gray, 100, 255, cv2.THRESH_BINARY_INV)
+        self.contours, self.hierarchy = cv2.findContours(self.thresholded_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        self.height, self.width = self.img.shape[:2]
 
-    def draw_nomogram(self):
-        height, width = self.img.shape[:2]
-        self.axis_img = np.zeros((height, width, 3), dtype=np.uint8)
-        self.axis_img.fill(255)  # Fill with white background
-        cv2.drawContours(self.axis_img, self.axis_contours, -1, (0, 0, 255), 2)
-        return self.axis_img
 
-class App:
+class NomogramApp:
     def __init__(self, root):
-        self.current_contour = None
-        self.nomogram = None
+        self.button_status = tk.NORMAL
+        self.lasso_points = None
+        self.lasso_started = None
         self.root = root
+        self.root.geometry("1280x800")
         self.root.title("Nomogram Image Processing")
+        self.canvas = None
+        self.original_img = None
+        self.nomogram = None
+        self.manual_drawn_contours = []
+        self.create_toolbar()
 
-        self.load_button = tk.Button(self.root, text="Load Image", command=self.load_image)
-        self.process_button = tk.Button(self.root, text="Process Image", command=self.process_image)
-        self.undo_button = tk.Button(self.root, text="Undo Last Draw", command=self.undo_last_draw)
-        self.delete_all_button = tk.Button(self.root, text="Delete All Contours", command=self.delete_all_contours)
-        self.delete_manual_button = tk.Button(self.root, text="Delete Manual Contours",
-                                              command=self.delete_manual_contours)
-        self.draw_line_button = tk.Button(self.root, text="Draw Straight Line", command=self.start_drawing_line)
-
-        self.load_button.pack()
-        self.process_button.pack()
-        self.undo_button.pack()
-        self.delete_all_button.pack()
-        self.delete_manual_button.pack()
-        self.draw_line_button.pack()
-
-        self.canvas = tk.Canvas(self.root, width=640, height=480, background="white")
-        self.canvas.pack()
-
-        self.process_button.config(state=tk.DISABLED)
-        self.undo_button.config(state=tk.DISABLED)
-        self.delete_all_button.config(state=tk.DISABLED)
-        self.delete_manual_button.config(state=tk.DISABLED)
-        self.draw_line_button.config(state=tk.DISABLED)
-        self.drawing = False
-        self.drawing_line = False
-        self.prev_x, self.prev_y = 0, 0
-        self.line_start_x, self.line_start_y = 0, 0
-
-        self.canvas.bind("<Button-1>", self.start_draw)
-        self.canvas.bind("<B1-Motion>", self.draw)
-        self.canvas.bind("<ButtonRelease-1>", self.stop_draw)
-
-    def load_image(self):
+    def select_image_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
         try:
             if file_path:
                 self.nomogram = Nomogram()
-                self.nomogram.load_image(file_path)
-                self.process_button.config(state=tk.NORMAL)
-                self.draw_line_button.config(state=tk.NORMAL)
-                self.delete_all_button.config(state=tk.NORMAL)
-                self.delete_manual_button.config(state=tk.NORMAL)
+                self.nomogram.set_attributes(file_path)
+                self.original_img = Image.open(file_path)
 
-                self.undo_button.config(state=tk.NORMAL)
+                canvas_width, canvas_height = 640, 480
+                img_width, img_height = self.original_img.size
+                aspect_ratio = img_width / img_height
+                if img_width > canvas_width or img_height > canvas_height:
+                    if canvas_width / aspect_ratio > canvas_height:
+                        new_width = int(canvas_height * aspect_ratio)
+                        new_height = canvas_height
+                    else:
+                        new_width = canvas_width
+                        new_height = int(canvas_width / aspect_ratio)
+                    self.original_img = self.original_img.resize((new_width, new_height), Image.LANCZOS)
+
+                self.display_image(self.original_img)
+                self.button_status = tk.NORMAL
 
         except Exception as e:
-            tk.messagebox.showerror("Error", e)
+            messagebox.showerror("Error", e)
 
-    def process_image(self):
-        if self.nomogram.img is not None:
-            self.display_image()
-        else:
-            tk.messagebox.showerror("Error", "Please load an image first.")
+    def display_image(self, image):
+        if self.canvas:
+            self.canvas.destroy()
+        self.canvas = tk.Canvas(self.root, width=image.width, height=image.height, background="white")
+        self.canvas.pack()
+        photo = ImageTk.PhotoImage(image=image)
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+        self.canvas.image = photo
 
-    def display_image(self):
-        if self.nomogram.img is not None:
-            original_img = cv2.cvtColor(self.nomogram.img, cv2.COLOR_BGR2RGB)
-            image = Image.fromarray(original_img)
-            canvas_width, canvas_height = self.canvas.winfo_width(), self.canvas.winfo_height()
-            img_width, img_height = image.size
-            scale_factor = min(canvas_width / img_width, canvas_height / img_height)
-            new_width, new_height = int(img_width * scale_factor), int(img_height * scale_factor)
-            image = image.resize((new_width, new_height))
-            photo = ImageTk.PhotoImage(image=image)
-            self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
-            self.canvas.image = photo
-            self.draw_nomogram_on_image()
-
-    def draw_nomogram_on_image(self):
-        if self.nomogram.img is not None:
-            axis_img = self.nomogram.draw_nomogram()
-            if self.drawing_line:
-                cv2.line(axis_img, (self.line_start_x, self.line_start_y), (self.prev_x, self.prev_y), (0, 255, 0),
-                         2)
-            if self.drawing:
-                cv2.drawContours(axis_img, [self.current_contour], -1, (0, 0, 255), 2)
-            axis_img = cv2.cvtColor(axis_img, cv2.COLOR_BGR2RGB)
-            image = Image.fromarray(axis_img)
-            canvas_width, canvas_height = self.canvas.winfo_width(), self.canvas.winfo_height()
-            img_width, img_height = image.size
-            scale_factor = min(canvas_width / img_width, canvas_height / img_height)
-            new_width, new_height = int(img_width * scale_factor), int(img_height * scale_factor)
-            image = image.resize((new_width, new_height))
-            photo = ImageTk.PhotoImage(image=image)
-            self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
-            self.canvas.image = photo
-
-    def start_draw(self, event):
-        if self.drawing_line:
-            return
-        self.drawing = True
-        self.current_contour = []
-        self.prev_x, self.prev_y = event.x, event.y
-
-    def draw(self, event):
-        if self.drawing_line:
-            return
-        if self.drawing:
-            x, y = event.x, event.y
-            self.current_contour.append([[x, y]])
-            self.canvas.create_line(self.prev_x, self.prev_y, x, y, fill='red', width=2)
-            self.prev_x, self.prev_y = x, y
-
-    def stop_draw(self, event):
-        if self.drawing_line:
-            return
-        if self.drawing:
-            self.drawing = False
-            self.nomogram.axis_contours.append(self.current_contour)
-            self.current_contour = []
-
-    def start_drawing_line(self):
-        self.drawing_line = True
-        self.line_start_x, self.line_start_y = self.prev_x, self.prev_y
-
-    def undo_last_draw(self):
-        if self.nomogram.axis_contours:
-            self.nomogram.axis_contours.pop()
-            self.display_image()
+    def undo(self):
+        print("hi")
 
     def delete_all_contours(self):
-        self.nomogram.axis_contours = []
-        self.display_image()
+        print("hi")
 
-    def delete_manual_contours(self):
-        if self.nomogram.axis_contours:
-            del self.nomogram.axis_contours[-1]
-            self.display_image()
+    def start_axis_selection(self):
+
+        self.lasso_started = False
+        self.lasso_points = []
+
+        # bind mouse events
+        self.canvas.bind("<Button-1>", self.start_lasso_selection)
+        self.canvas.bind("<B1-Motion>", self.continue_lasso_selection)
+        self.canvas.bind("<ButtonRelease-1>", self.end_lasso_selection)
+
+    def start_lasso_selection(self, event):
+
+        self.lasso_started = True  # state
+        x, y = event.x, event.y
+        self.lasso_points = [(x, y)]
+
+    def continue_lasso_selection(self, event):
+        # continue lasso selection by drawing lines on  canvas
+        if self.lasso_started:
+            x, y = event.x, event.y
+
+            self.lasso_points.append((x, y))
+            if len(self.lasso_points) > 1:
+                x1, y1 = self.lasso_points[-2]
+                x2, y2 = self.lasso_points[-1]
+                self.canvas.create_line(x1, y1, x2, y2, fill="red", width=2)
+
+    def end_lasso_selection(self, event):
+        if self.lasso_started:
+            self.lasso_started = False
+
+            # Convert lasso points to a numpy array
+            lasso_points_np = np.array(self.lasso_points, dtype=np.int32)
+
+            # Create a mask image with zeros
+            mask = np.zeros((self.original_img.size[1], self.original_img.size[0]), dtype=np.uint8)
+
+            # Draw the lasso polygon on the mask
+            cv2.fillPoly(mask, [lasso_points_np], color=(255, 255, 255))
+
+            # Create an image with contours drawn on it
+            contours_image = np.zeros_like(self.nomogram.img)
+            for contour in self.nomogram.contours:
+                area = cv2.contourArea(contour)
+                if area > 100:  # You can adjust this threshold based on your needs
+                    cv2.drawContours(contours_image, [contour], -1, (0, 255, 0), 2)
+
+            # Mask the contours image with the lasso mask
+            masked_contours = cv2.bitwise_and(contours_image, contours_image, mask=mask)
+
+            # Convert the result to PIL Image
+            contours_pil = Image.fromarray(cv2.cvtColor(masked_contours, cv2.COLOR_BGR2RGB))
+
+            # Create a Tkinter PhotoImage object from the PIL Image
+            photo = ImageTk.PhotoImage(image=contours_pil)
+
+            # Update the existing canvas with the new image
+            self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+            self.canvas.image = photo
+
+    def create_toolbar(self):
+        # Create a frame to hold the toolbar buttons
+
+        toolbar_frame = tk.Frame(self.root, bd=1, relief=tk.RAISED)
+
+        icon_dimension = (32, 32)
+
+        try:
+            self.select_image = Image.open("icons/select_image_icon.png").resize(icon_dimension)
+            self.undo = Image.open("icons/undo.png").resize(icon_dimension)
+            self.delete_all = Image.open("icons/remove.png").resize(icon_dimension)
+            self.get_lasso = Image.open("icons/lasso.png").resize(icon_dimension)
+
+            self.select_icon = ImageTk.PhotoImage(self.select_image)
+            self.undo_icon = ImageTk.PhotoImage(self.undo)
+            self.delete_icon = ImageTk.PhotoImage(self.delete_all)
+            self.lasso_icon = ImageTk.PhotoImage(self.get_lasso)
+
+            self.select_button = tk.Button(toolbar_frame, image=self.select_icon, command=self.select_image_file)
+            self.undo_button = tk.Button(toolbar_frame, image=self.undo_icon, command=self.undo)
+            self.delete_button = tk.Button(toolbar_frame, image=self.delete_icon, command=self.delete_all_contours)
+            self.lasso_button = tk.Button(toolbar_frame, image=self.lasso_icon, command=self.start_axis_selection)
+
+            self.select_button.pack(side=tk.LEFT, padx=2, pady=2)
+            self.undo_button.pack(side=tk.LEFT, padx=2, pady=2)
+            self.delete_button.pack(side=tk.LEFT, padx=2, pady=2)
+            self.lasso_button.pack(side=tk.LEFT, padx=2, pady=2)
+
+            toolbar_frame.pack(side=tk.TOP, fill=tk.X)
+        except Exception as e:
+            print("Error loading icon images:", e)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.geometry("800x600")
-    app = App(root)
+    app = NomogramApp(root)
+
     root.mainloop()
