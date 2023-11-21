@@ -17,10 +17,8 @@ instructions to run automated tests.
 
 ### Build steps
 
-List the steps required to build software. 
+python3 axisDetection.py
 
-Hopefully something simple like `pip install -e .` or `make` or `cd build; cmake ..`. In
-some cases you may have much more involved setup required.
 
 ### Test steps
 

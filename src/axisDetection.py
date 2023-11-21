@@ -110,34 +110,7 @@ class NomogramApp:
         if self.lasso_started:
             self.lasso_started = False
 
-            # Convert lasso points to a numpy array
-            lasso_points_np = np.array(self.lasso_points, dtype=np.int32)
 
-            # Create a mask image with zeros
-            mask = np.zeros((self.original_img.size[1], self.original_img.size[0]), dtype=np.uint8)
-
-            # Draw the lasso polygon on the mask
-            cv2.fillPoly(mask, [lasso_points_np], color=(255, 255, 255))
-
-            # Create an image with contours drawn on it
-            contours_image = np.zeros_like(self.nomogram.img)
-            for contour in self.nomogram.contours:
-                area = cv2.contourArea(contour)
-                if area > 100:  # You can adjust this threshold based on your needs
-                    cv2.drawContours(contours_image, [contour], -1, (0, 255, 0), 2)
-
-            # Mask the contours image with the lasso mask
-            masked_contours = cv2.bitwise_and(contours_image, contours_image, mask=mask)
-
-            # Convert the result to PIL Image
-            contours_pil = Image.fromarray(cv2.cvtColor(masked_contours, cv2.COLOR_BGR2RGB))
-
-            # Create a Tkinter PhotoImage object from the PIL Image
-            photo = ImageTk.PhotoImage(image=contours_pil)
-
-            # Update the existing canvas with the new image
-            self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
-            self.canvas.image = photo
 
     def create_toolbar(self):
         # Create a frame to hold the toolbar buttons

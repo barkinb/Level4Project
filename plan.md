@@ -21,7 +21,7 @@ User interface design, design prototyping, requirements consideration
 Working on pynomo to understand how to implement the program
 * **Week 6**
 Same as week 5
-* **Week 7** Edge detection, statistical models, 
+* **Week 7** Edge detection
 * **Week 8** Edge detection
 * **Week 9** Implement bezier curves 
 * **Week 10** Add statistical distributions onto the axis
