@@ -1,8 +1,9 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, simpledialog
 from PIL import Image, ImageTk, ImageDraw
 import cv2
 import numpy as np
+from matplotlib.figure import Figure
 
 
 class Nomogram:
@@ -27,16 +28,18 @@ class Nomogram:
 class NomogramApp:
     def __init__(self, root):
         self.button_status = tk.NORMAL
-        self.lasso_points = None
-        self.lasso_started = None
+
         self.root = root
         self.root.geometry("1280x800")
         self.root.title("Nomogram Image Processing")
         self.canvas = None
         self.original_img = None
         self.nomogram = None
-        self.manual_drawn_contours = []
+
+        self.axis_coordinates = {}
         self.create_toolbar()
+
+
 
     def select_image_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
@@ -59,6 +62,10 @@ class NomogramApp:
                     self.original_img = self.original_img.resize((new_width, new_height), Image.LANCZOS)
 
                 self.display_image(self.original_img)
+                self.axis_coordinates = {} ## resets coordinates when a new image is loaded
+                self.manual_drawn_contours = []
+                self.lasso_points = None
+                self.lasso_started = None
                 self.button_status = tk.NORMAL
 
         except Exception as e:
@@ -72,6 +79,28 @@ class NomogramApp:
         photo = ImageTk.PhotoImage(image=image)
         self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
         self.canvas.image = photo
+        self.canvas.bind("<Button-1>", self.capture_axis_coordinates)
+
+    def capture_axis_coordinates(self, event):
+        axis_id = simpledialog.askstring("Enter Axis ID", "Enter an identifier for the axis:")
+        if axis_id is not None:
+            x, y = event.x, event.y
+            value = simpledialog.askfloat("Enter Value", f"Enter the axis value for {axis_id}:")
+            if value is not None:
+                if axis_id not in self.axis_coordinates:
+                    self.axis_coordinates[axis_id] = []
+                self.axis_coordinates[axis_id].append((x, y, value))
+                self.display_axis_coordinates()
+
+    def display_axis_coordinates(self):
+        # Display the axis coordinates in a label or messagebox
+        if self.axis_coordinates:
+            coordinates_str = ""
+            for axis_id, coords in self.axis_coordinates.items():
+                coordinates_str += f"{axis_id}:\n"
+                coordinates_str += '\n'.join([f"  ({x}, {y}): {value}" for x, y, value in coords])
+                coordinates_str += "\n\n"
+            messagebox.showinfo("Axis Coordinates", f"Axis Coordinates:\n{coordinates_str}")
 
     def undo(self):
         print("hi")
@@ -88,6 +117,9 @@ class NomogramApp:
         self.canvas.bind("<Button-1>", self.start_lasso_selection)
         self.canvas.bind("<B1-Motion>", self.continue_lasso_selection)
         self.canvas.bind("<ButtonRelease-1>", self.end_lasso_selection)
+
+    def start_normal_selection(self):
+        self.canvas.bind("<Button-1>",self.draw_normal_distribution)
 
     def start_lasso_selection(self, event):
 
@@ -110,8 +142,20 @@ class NomogramApp:
         if self.lasso_started:
             self.lasso_started = False
 
+    def calculate_slope(self):
+        for
 
+    def draw_normal_distribution(self,event):
+        mouse_x, mouse_y = event.x, event.y
 
+        std_dev = 1
+
+        print(self.canvas.winfo_height())
+
+        self.plot_normal_distribution(mouse_x, std_dev)
+
+    def pick_axis(self):
+        self.canvas.bind("<Button-1>", self.capture_axis_coordinates)
     def create_toolbar(self):
         # Create a frame to hold the toolbar buttons
 
@@ -124,26 +168,42 @@ class NomogramApp:
             self.undo = Image.open("icons/undo.png").resize(icon_dimension)
             self.delete_all = Image.open("icons/remove.png").resize(icon_dimension)
             self.get_lasso = Image.open("icons/lasso.png").resize(icon_dimension)
+            self.new_axis = Image.open("icons/axis.png").resize(icon_dimension)
+            self.normal_img = Image.open("icons/normal.png").resize(icon_dimension)
 
             self.select_icon = ImageTk.PhotoImage(self.select_image)
             self.undo_icon = ImageTk.PhotoImage(self.undo)
             self.delete_icon = ImageTk.PhotoImage(self.delete_all)
             self.lasso_icon = ImageTk.PhotoImage(self.get_lasso)
+            self.axis_icon = ImageTk.PhotoImage(self.new_axis)
+            self.normal_icon = ImageTk.PhotoImage(self.normal_img)
 
             self.select_button = tk.Button(toolbar_frame, image=self.select_icon, command=self.select_image_file)
             self.undo_button = tk.Button(toolbar_frame, image=self.undo_icon, command=self.undo)
             self.delete_button = tk.Button(toolbar_frame, image=self.delete_icon, command=self.delete_all_contours)
             self.lasso_button = tk.Button(toolbar_frame, image=self.lasso_icon, command=self.start_axis_selection)
+            self.axis_button = tk.Button(toolbar_frame,image=self.axis_icon,command=self.pick_axis)
+            self.normal_button = tk.Button(toolbar_frame,image=self.normal_icon,command=self.start_normal_selection)
 
             self.select_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.undo_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.delete_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.lasso_button.pack(side=tk.LEFT, padx=2, pady=2)
+            self.axis_button.pack(side=tk.LEFT,padx=2,pady=2)
+            self.normal_button.pack(side=tk.LEFT,padx=2,pady=2)
 
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
             print("Error loading icon images:", e)
 
+    def plot_normal_distribution(self,mean,std_dev):
+        x_values = np.linspace(mean - 4 * std_dev, mean + 4 * std_dev, 100)
+        y_values = (1 / (std_dev * np.sqrt(2 * np.pi))) * np.exp(-(x_values - mean) ** 2 / (2 * std_dev ** 2))
+        axis_length = self.canvas.winfo_height
+        y_values = y_values / np.max(y_values) * axis_length # Normalize the y-values
+
+        coords = [(x, axis_length - y) for x, y in zip(x_values, y_values)]
+        self.canvas.create_line(coords, fill="blue", width=2)
 
 if __name__ == "__main__":
     root = tk.Tk()

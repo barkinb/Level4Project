@@ -139,3 +139,10 @@
 * *1 hr* looking at Computer Aided Graphic Design for bezier curves 
 ### 16/11/2023
 * *3 hrs* Trying to fix contour selection no progress 
+
+## Week 10
+
+### 22/11/2023
+* *2 hrs* Creating a normal distribution drawing 
+* *1 hrs* Trying with Matplotlib but decided against it 
+* *3 hrs* Implementing an axis selection function
