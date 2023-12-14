@@ -146,3 +146,28 @@
 * *2 hrs* Creating a normal distribution drawing 
 * *1 hrs* Trying with Matplotlib but decided against it 
 * *3 hrs* Implementing an axis selection function
+
+### 24/11/2023
+* *.5 hrs* supervisor meeting 
+* *.5 hrs* taking notes after supervisor meeting 
+
+## Week 11 
+
+### 30/11/2023 
+* *2 hrs* Attended the project lecture 
+### 01/12/2023
+* *1 hr* creating plan and brainstorming 
+* *1 hr* supervisor meeting prep
+## Week 12
+### 08/12/2023
+* *1.5 hr* supervisor meeting and notes 
+
+## Week 13
+### 13/12/2023 
+* *2 hr* Looking at other visual nomogram generator NomoDevel 
+* *.5 hr* watched a video on direct manipulation strategies 
+* *2 hr* Dissertation write up and looking at hall of fame projects
+* *2 hr* Nomogram research and refresh
+
+### 14/12/2023
+* *2 hr* Playing with inkscape to brainstorm a way to apply features on my program 

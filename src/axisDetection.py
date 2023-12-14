@@ -142,8 +142,7 @@ class NomogramApp:
         if self.lasso_started:
             self.lasso_started = False
 
-    def calculate_slope(self):
-        for
+
 
     def draw_normal_distribution(self,event):
         mouse_x, mouse_y = event.x, event.y
