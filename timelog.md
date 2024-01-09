@@ -171,3 +171,16 @@
 
 ### 14/12/2023
 * *2 hr* Playing with inkscape to brainstorm a way to apply features on my program 
+* *4 hrs* Attempting to implement Bezier curves 
+* *2 hr* Writing the status report
+
+### 15/12/2023 
+* *2 hr* working on the status report and research 
+
+# Semester 2
+## Week 0
+### 7.01.2024
+* *2 hrs* working on implementing the bezier curves on the ui 
+## Week 1
+### 8.01.2024
+* *3 hrs* Prototyping and design

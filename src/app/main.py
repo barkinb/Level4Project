@@ -150,15 +150,24 @@ class NomogramApp:
 
         control_points = self.axis_coordinates[axis_id]
 
-        if len(control_points) < 2:
-            messagebox.showerror("Error", "Need at least 2 control points to draw a Bezier curve.")
-            return
+        if len(control_points) >= 2:
+            self.draw_bezier_curve(control_points)
 
-        self.bezier_control_points.extend(control_points)
+    def draw_bezier_curve(self, control_points):
+        nCPTS = len(control_points)
+        n = nCPTS - 1
+        cells = 100
+        t = np.linspace(0, 1, cells)
+        xBezier = np.zeros((1, cells))
+        yBezier = np.zeros((1, cells))
 
-        # Draw the Bezier curve on the canvas
-        if len(self.bezier_control_points) >= 4:
-            self.canvas.create_line(self.bezier_control_points, fill="green", width=2)
+        for i in range(nCPTS):
+            xBezier += basis(n, i, t) * control_points[i][0]
+            yBezier += basis(n, i, t) * control_points[i][1]
+
+        curve_coords = [(int(x), int(y)) for x, y in zip(xBezier.flatten(), yBezier.flatten())]
+
+        self.canvas.create_line(curve_coords, fill="green", width=2)
 
     def draw_normal_distribution(self,event):
         mouse_x, mouse_y = event.x, event.y
