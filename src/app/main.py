@@ -4,6 +4,7 @@ from PIL import Image, ImageTk, ImageDraw
 import cv2
 import numpy as np
 from matplotlib.figure import Figure
+from maths_functions import ni,basis
 
 
 class Nomogram:
@@ -31,14 +32,14 @@ class NomogramApp:
 
         self.root = root
         self.root.geometry("1280x800")
-        self.root.title("Nomogram Image Processing")
+        self.root.title("Probabilistic Nomograms")
         self.canvas = None
         self.original_img = None
         self.nomogram = None
 
         self.axis_coordinates = {}
         self.create_toolbar()
-
+        self.bezier_control_points = []
 
 
     def select_image_file(self):
@@ -142,7 +143,22 @@ class NomogramApp:
         if self.lasso_started:
             self.lasso_started = False
 
+    def draw_bezier(self):
+        axis_id = simpledialog.askstring("Enter Axis ID", "Enter an identifier for the axis to draw:")
+        while axis_id not in self.axis_coordinates:
+            axis_id = simpledialog.askstring("No Coordinates for Axis ID", "Enter an identifier for the axis to draw:")
 
+        control_points = self.axis_coordinates[axis_id]
+
+        if len(control_points) < 2:
+            messagebox.showerror("Error", "Need at least 2 control points to draw a Bezier curve.")
+            return
+
+        self.bezier_control_points.extend(control_points)
+
+        # Draw the Bezier curve on the canvas
+        if len(self.bezier_control_points) >= 4:
+            self.canvas.create_line(self.bezier_control_points, fill="green", width=2)
 
     def draw_normal_distribution(self,event):
         mouse_x, mouse_y = event.x, event.y
@@ -169,6 +185,7 @@ class NomogramApp:
             self.get_lasso = Image.open("icons/lasso.png").resize(icon_dimension)
             self.new_axis = Image.open("icons/axis.png").resize(icon_dimension)
             self.normal_img = Image.open("icons/normal.png").resize(icon_dimension)
+            self.bezier_img = Image.open("icons/bezier.png").resize(icon_dimension)
 
             self.select_icon = ImageTk.PhotoImage(self.select_image)
             self.undo_icon = ImageTk.PhotoImage(self.undo)
@@ -176,12 +193,14 @@ class NomogramApp:
             self.lasso_icon = ImageTk.PhotoImage(self.get_lasso)
             self.axis_icon = ImageTk.PhotoImage(self.new_axis)
             self.normal_icon = ImageTk.PhotoImage(self.normal_img)
+            self.bezier_icon = ImageTk.PhotoImage(self.bezier_img)
 
             self.select_button = tk.Button(toolbar_frame, image=self.select_icon, command=self.select_image_file)
             self.undo_button = tk.Button(toolbar_frame, image=self.undo_icon, command=self.undo)
             self.delete_button = tk.Button(toolbar_frame, image=self.delete_icon, command=self.delete_all_contours)
             self.lasso_button = tk.Button(toolbar_frame, image=self.lasso_icon, command=self.start_axis_selection)
             self.axis_button = tk.Button(toolbar_frame,image=self.axis_icon,command=self.pick_axis)
+            self.bezier_button = tk.Button(toolbar_frame,image=self.bezier_icon,command=self.draw_bezier)
             self.normal_button = tk.Button(toolbar_frame,image=self.normal_icon,command=self.start_normal_selection)
 
             self.select_button.pack(side=tk.LEFT, padx=2, pady=2)
@@ -189,6 +208,7 @@ class NomogramApp:
             self.delete_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.lasso_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.axis_button.pack(side=tk.LEFT,padx=2,pady=2)
+            self.bezier_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.normal_button.pack(side=tk.LEFT,padx=2,pady=2)
 
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
