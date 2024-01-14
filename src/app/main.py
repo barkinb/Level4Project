@@ -41,6 +41,8 @@ class NomogramApp:
         self.create_toolbar()
         self.bezier_control_points = []
 
+        self.bezier_control_points_objects = []
+        self.bezier_curve_object = None
 
     def select_image_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
@@ -168,6 +170,8 @@ class NomogramApp:
         curve_coords = [(int(x), int(y)) for x, y in zip(xBezier.flatten(), yBezier.flatten())]
 
         self.canvas.create_line(curve_coords, fill="green", width=2)
+
+
 
     def draw_normal_distribution(self,event):
         mouse_x, mouse_y = event.x, event.y
