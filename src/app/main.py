@@ -95,6 +95,7 @@ class NomogramApp:
                 self.axis_coordinates[axis_id].append((x, y, value))
                 self.display_axis_coordinates()
 
+
     def display_axis_coordinates(self):
         # Display the axis coordinates in a label or messagebox
         if self.axis_coordinates:
@@ -134,7 +135,6 @@ class NomogramApp:
         # continue lasso selection by drawing lines on  canvas
         if self.lasso_started:
             x, y = event.x, event.y
-
             self.lasso_points.append((x, y))
             if len(self.lasso_points) > 1:
                 x1, y1 = self.lasso_points[-2]
@@ -167,11 +167,24 @@ class NomogramApp:
             xBezier += basis(n, i, t) * control_points[i][0]
             yBezier += basis(n, i, t) * control_points[i][1]
 
+        # Calculate the curve coordinates
         curve_coords = [(int(x), int(y)) for x, y in zip(xBezier.flatten(), yBezier.flatten())]
 
-        self.canvas.create_line(curve_coords, fill="green", width=2)
+        # Delete previous curve and control points
+        if self.bezier_curve_object:
+            self.canvas.delete(self.bezier_curve_object)
+        for point_object in self.bezier_control_points_objects:
+            self.canvas.delete(point_object)
 
+        # Draw the new curve
+        self.bezier_curve_object = self.canvas.create_line(curve_coords, fill="green", width=2)
 
+        # Draw control points
+        for x, y in control_points:
+            point_object = self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill="red", outline="black", width=2)
+            self.bezier_control_points_objects.append(point_object)
+
+        self.display_axis_coordinates()
 
     def draw_normal_distribution(self,event):
         mouse_x, mouse_y = event.x, event.y
