@@ -180,11 +180,12 @@ class NomogramApp:
         self.bezier_curve_object = self.canvas.create_line(curve_coords, fill="green", width=2)
 
         # Draw control points
-        for x, y in control_points:
+        print(control_points)
+        for x, y, *_ in control_points:
             point_object = self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill="red", outline="black", width=2)
             self.bezier_control_points_objects.append(point_object)
 
-        self.display_axis_coordinates()
+
 
     def draw_normal_distribution(self,event):
         mouse_x, mouse_y = event.x, event.y
