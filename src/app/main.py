@@ -1,10 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 from PIL import Image, ImageTk, ImageDraw
-import cv2
 import numpy as np
-from matplotlib.figure import Figure
-from maths_functions import ni, basis
 
 
 class NomogramApp:
@@ -25,7 +22,7 @@ class NomogramApp:
             if file_path:
                 self.original_img = Image.open(file_path)
 
-                canvas_width, canvas_height = 640, 480
+                canvas_width, canvas_height = 1152, 720
                 img_width, img_height = self.original_img.size
                 aspect_ratio = img_width / img_height
                 if img_width > canvas_width or img_height > canvas_height:
@@ -38,7 +35,6 @@ class NomogramApp:
                     self.original_img = self.original_img.resize((new_width, new_height), Image.LANCZOS)
 
                 self.display_image(self.original_img)
-                self.button_status = tk.NORMAL
 
         except Exception as e:
             messagebox.showerror("Error", e)
@@ -49,10 +45,10 @@ class NomogramApp:
     def display_image(self, image):
         if self.canvas:
             self.canvas.destroy()
-        self.canvas = tk.Canvas(self.root, width=image.width, height=image.height, background="white")
+        self.canvas = tk.Canvas(self.root, width=image.width+50, height=image.height+50, background="white")
         self.canvas.pack()
         photo = ImageTk.PhotoImage(image=image)
-        self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+        self.canvas.create_image(25, 25, anchor=tk.NW, image=photo)
         self.canvas.image = photo
         ##self.canvas.bind("<Button-1>", self.capture_axis_coordinates)
 
@@ -66,7 +62,6 @@ class NomogramApp:
         try:
             self.select_image = Image.open("icons/select_image_icon.png").resize(icon_dimension)
             self.new_axis = Image.open("icons/axis.png").resize(icon_dimension)
-
 
             self.select_icon = ImageTk.PhotoImage(self.select_image)
             self.axis_icon = ImageTk.PhotoImage(self.new_axis)
@@ -84,6 +79,7 @@ class NomogramApp:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.resizable(width=False, height=False) #disables windows resizing for consistency
     app = NomogramApp(root)
 
     root.mainloop()
