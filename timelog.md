@@ -164,10 +164,36 @@
 
 ## Week 13
 ### 13/12/2023 
-* *2 hr* Looking at other visual nomogram generator NomoDevel 
+* *2 hr* Looking at other visual nomogram generators NomoDevel 
 * *.5 hr* watched a video on direct manipulation strategies 
-* *2 hr* Dissertation write up and looking at hall of fame projects
+* *2 hr* Dissertation write-up and looking at Hall of fame projects
 * *2 hr* Nomogram research and refresh
 
 ### 14/12/2023
 * *2 hr* Playing with inkscape to brainstorm a way to apply features on my program 
+* *4 hrs* Attempting to implement Bezier curves 
+* *2 hr* Writing the status report
+
+### 15/12/2023 
+* *2 hr* working on the status report and research 
+
+# Semester 2
+## Week 0
+### 7.01.2024
+* *2 hrs* working on implementing the bezier curves on the UI 
+## Week 1
+
+### 13.01.2024
+* *5 hrs* refresh of research and combining more information about uses from a new paper
+
+### 14.01.2024
+* *4 hrs* dissertation write up
+
+## Week 2
+### 15.01.2024 
+* *2.5 hrs* dissertation write up and hall of fame browsing
+* *2 hrs* can now draw straight bezier curves
+
+### 16.01.2024
+* *.5 hrs* shows control points on axis'
+
