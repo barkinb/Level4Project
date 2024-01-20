@@ -66,7 +66,7 @@ class NomogramApp:
         try:
             self.select_image = Image.open("icons/select_image_icon.png").resize(icon_dimension)
             self.new_axis = Image.open("icons/axis.png").resize(icon_dimension)
-            self.bezier_img = Image.open("icons/bezier.png").resize(icon_dimension)
+
 
             self.select_icon = ImageTk.PhotoImage(self.select_image)
             self.axis_icon = ImageTk.PhotoImage(self.new_axis)
