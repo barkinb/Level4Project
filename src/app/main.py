@@ -176,6 +176,8 @@ class NomogramApp:
         if axis_id in self.control_points:
             self.draw_bezier(axis_id)
 
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     root.resizable(width=False, height=False)  # disables windows resizing for consistency

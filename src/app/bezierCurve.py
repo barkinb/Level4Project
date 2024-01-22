@@ -19,7 +19,7 @@ class BezierCurve:
         self.curve = None
 
     def draw(self,canvas: Canvas) -> None:
-        self.sort_points()
+        #self.sort_points()
         if self.curve is not None:
             self.canvas.delete(self.curve)
         curve_points = []
