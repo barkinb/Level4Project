@@ -1,7 +1,7 @@
 from tkinter import Canvas
 from math import sqrt
 from maths_functions import ni,basis
-## DISCLAIMER = a portion of code in this file originates from https://github.com/otto-kokstein/bezierve-v2
+##DISCLAIMER = a portion of code in this file originates from https://github.com/otto-kokstein/bezierve-v2
 NUMBER_OF_DETAIL = 10000
 DEFAULT_CURVE_WIDTH = 3
 DEFAULT_CURVE_COLOUR = "#050505"
@@ -13,7 +13,6 @@ class BezierCurve:
 
         self.curve_colour = DEFAULT_CURVE_COLOUR
         self.curve_width = DEFAULT_CURVE_WIDTH
-
         self.name = name
         self.points = points
         self.canvas = canvas
@@ -37,8 +36,6 @@ class BezierCurve:
     def calculate_curve_point(self, t: float) :
         point_x = 0.0
         point_y = 0.0
-
-        print(self.points[0][0])
 
 
         if len(self.points) == 2:
