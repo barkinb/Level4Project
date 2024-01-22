@@ -107,7 +107,9 @@ class NomogramApp:
                                  lambda event, axis=axis_id, id=control_point_id: self.drag(event, axis, id))
             self.canvas.tag_bind(control_point_id, "<ButtonRelease-1>",
                                  lambda event, axis=axis_id, id=control_point_id: self.stop_drag(event, axis, id))
+        if axis_id in self.curve_objects:
 
+            self.update_bezier(axis_id)
         self.canvas.unbind("<Button-1>")
 
     def start_drag(self, event, axis_id, control_point_id):
@@ -135,8 +137,7 @@ class NomogramApp:
         
         control_point_index = int(control_point_id.split('_')[-1])
         self.control_points[axis_id][control_point_index] = (x, y)
-        if axis_id in self.control_points:
-            self.draw_bezier(axis_id)
+        self.update_bezier(axis_id)
         self.display_axis_coordinates()
 
     def display_axis_coordinates(self):
@@ -169,6 +170,11 @@ class NomogramApp:
 
         curve.draw(self.canvas)
 
+    def update_bezier(self,axis_id):
+        if axis_id not in self.control_points:
+            pass
+        if axis_id in self.control_points:
+            self.draw_bezier(axis_id)
 
 if __name__ == "__main__":
     root = tk.Tk()
