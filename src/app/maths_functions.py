@@ -1,5 +1,4 @@
 import numpy as np
-
 def ni(n,i):
     return np.math.factorial(n) / (np.math.factorial(n) * np.math.factorial(n-i))
 

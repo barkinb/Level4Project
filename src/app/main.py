@@ -1,7 +1,9 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox, simpledialog
+from tkinter import filedialog, messagebox, simpledialog,ttk
 from PIL import Image, ImageTk, ImageDraw
 import numpy as np
+
+from src.app.bezierCurve import BezierCurve
 
 
 class NomogramApp:
@@ -15,7 +17,7 @@ class NomogramApp:
         self.canvas = None
         self.original_img = None
         self.control_points = {}
-
+        self.curve_objects = {}
         self.create_toolbar()
     def create_toolbar(self):
         # Create a frame to hold the toolbar buttons
@@ -37,10 +39,10 @@ class NomogramApp:
             self.axis_button = tk.Button(toolbar_frame, image=self.axis_icon, command=self.pick_axis)
             self.bezier_button = tk.Button(toolbar_frame, image=self.bezier_icon,command=self.draw_bezier)
 
+
             self.select_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.axis_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.bezier_button.pack(side=tk.LEFT, padx=2, pady=2)
-
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
             print("Error loading icon images:", e)
@@ -93,7 +95,7 @@ class NomogramApp:
                 self.control_points[axis_id].append((x, y, value))
                 self.display_axis_coordinates()
 
-                point_size = 8
+                point_size = 2
                 control_point_id = f"{axis_id}_{len(self.control_points[axis_id]) - 1}"
 
                 self.canvas.create_oval(
@@ -110,6 +112,7 @@ class NomogramApp:
 
     def start_drag(self, event, axis_id, control_point_id):
         # Record the starting position of the control point
+        ## adapted from https://stackoverflow.com/questions/29789554/tkinter-draw-rectangle-using-a-mouse
         self.start_x = self.canvas.canvasx(event.x)
         self.start_y = self.canvas.canvasy(event.y)
         self.current_control_point_id = control_point_id
@@ -147,7 +150,25 @@ class NomogramApp:
             print(coordinates_str)
 
     def draw_bezier(self):
-        pass
+        bezier_axis_id = simpledialog.askstring("Enter Axis ID", "Enter the name of the axis you wish to draw:")
+        while bezier_axis_id not in self.control_points:
+            bezier_axis_id = simpledialog.askstring("Enter Axis ID", "Enter the name of the axis you wish to draw:")
+
+        if bezier_axis_id in self.control_points:
+            # Get the control points for the selected axis
+            control_points = self.control_points[bezier_axis_id]
+
+            # Check if a BezierCurve object already exists for the axis
+            if bezier_axis_id in self.curve_objects:
+                curve = self.curve_objects[bezier_axis_id]
+                curve.points = control_points  # Update the control points
+            else:
+                # Create a new BezierCurve object
+                curve = BezierCurve(bezier_axis_id, control_points,self.canvas)
+                self.curve_objects[bezier_axis_id] = curve
+
+            curve.draw(self.canvas)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
