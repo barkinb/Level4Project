@@ -130,6 +130,7 @@ class NomogramApp:
         self.canvas.move(control_point_id, delta_x, delta_y)
         self.start_x = cur_x
         self.start_y = cur_y
+        self.update_bezier(axis_id)
 
     def stop_drag(self, event, axis_id, control_point_id):
         # Update the control point's position in the data structure
@@ -137,7 +138,7 @@ class NomogramApp:
         
         control_point_index = int(control_point_id.split('_')[-1])
         self.control_points[axis_id][control_point_index] = (x, y)
-        self.update_bezier(axis_id)
+
         self.display_axis_coordinates()
 
     def display_axis_coordinates(self):

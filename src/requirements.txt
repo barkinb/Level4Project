@@ -6,3 +6,4 @@ PyX==0.16.0
 iPyCanvas==0.13.1
 PyMC==4.0.0
 opencv-python==4.8.1.78
+bezier==2023.7.28
