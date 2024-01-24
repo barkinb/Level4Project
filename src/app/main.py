@@ -92,7 +92,7 @@ class NomogramApp:
             self.control_points[axis_id].append((x, y))
             self.display_axis_coordinates()
 
-            point_size = 2
+            point_size = 5
             control_point_id = f"{axis_id}_{len(self.control_points[axis_id]) - 1}"
 
             self.canvas.create_oval(
@@ -130,6 +130,12 @@ class NomogramApp:
         self.canvas.move(control_point_id, delta_x, delta_y)
         self.start_x = cur_x
         self.start_y = cur_y
+
+        # Update the control point's position in the data structure
+        control_point_index = int(control_point_id.split('_')[-1])
+        self.control_points[axis_id][control_point_index] = (cur_x, cur_y)
+
+        # Update the bezier curve
         self.update_bezier(axis_id)
 
     def stop_drag(self, event, axis_id, control_point_id):
@@ -138,7 +144,7 @@ class NomogramApp:
         
         control_point_index = int(control_point_id.split('_')[-1])
         self.control_points[axis_id][control_point_index] = (x, y)
-
+        self.update_bezier(axis_id)
         self.display_axis_coordinates()
 
     def display_axis_coordinates(self):
@@ -157,16 +163,13 @@ class NomogramApp:
             while bezier_axis_id not in self.control_points:
                 bezier_axis_id = simpledialog.askstring("Axis Not Found", "Enter the name of the axis you wish to draw:")
 
-        # Get the control points for the selected axis
-        control_points = self.control_points[bezier_axis_id]
-
         # Check if a BezierCurve object already exists for the axis
         if bezier_axis_id in self.curve_objects:
             curve = self.curve_objects[bezier_axis_id]
-            curve.points = control_points  # Update the control points
+            curve.points = self.control_points[bezier_axis_id]  # Update the control points
         else:
             # Create a new BezierCurve object
-            curve = BezierCurve(bezier_axis_id, control_points, self.canvas)
+            curve = BezierCurve(bezier_axis_id, self.control_points[bezier_axis_id], self.canvas)
             self.curve_objects[bezier_axis_id] = curve
 
         curve.draw(self.canvas)

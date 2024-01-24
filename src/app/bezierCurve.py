@@ -16,30 +16,41 @@ class BezierCurve:
     def __init__(self, name, points, canvas, width: int = DEFAULT_CURVE_WIDTH,
                  color: str = DEFAULT_CURVE_COLOUR) -> None:
 
+        self.curve_points = None
         self.curve_colour = DEFAULT_CURVE_COLOUR
         self.curve_width = DEFAULT_CURVE_WIDTH
         self.name = name
         self.points = points
         self.no_points = len(self.points)
         self.canvas = canvas
+
         self.curve = None
 
     def draw(self, canvas: Canvas) -> None:
-        #self.sort_points()
+        ##self.sort_points()
         if self.curve is not None:
             self.canvas.delete(self.curve)
         curve_points = []
 
-        for i in range(NUMBER_OF_DETAIL):
-            t = i / (NUMBER_OF_DETAIL - 1)
+        x_coordinates, y_coordinates = zip(*self.points)
+        fortran_array = np.asfortranarray([x_coordinates, y_coordinates])
+        self.curve_points = bezier.Curve.from_nodes(fortran_array)
+        parameters = np.linspace(0, 1, NUMBER_OF_DETAIL)
 
-            point_x, point_y = self.calculate_curve_point(t)
-            curve_points.append([point_x, point_y])
+        points = self.curve_points.evaluate_multi(parameters)
+        scaled_points = [(points[0][i],points[1][i]) for i in range(len(points[0]))]
+        # x,y = []
 
-        self.curve = canvas.create_line(
-            *curve_points, width=self.curve_width, fill=self.curve_colour
+        print(points)
+        print(scaled_points)
+        self.curve = canvas.create_line(*sum(scaled_points, ()), width=self.curve_width, fill=self.curve_colour)
 
-        )
+
+
+        # self.curve = canvas.create_line(
+        #     *self.curve_points, width=self.curve_width, fill=self.curve_colour
+        #
+        # )
 
     def sort_points(self):
 
@@ -52,7 +63,7 @@ class BezierCurve:
 
         self.points = unique_points
 
-    def calculate_curve_point(self, t: float):
+    def calculate_max_4_control_points(self, t: float):
         point_x = 0.0
         point_y = 0.0
         n = self.no_points
