@@ -1,5 +1,4 @@
 from tkinter import Canvas
-from math import sqrt
 from maths_functions import *
 from bezier import bezier
 
@@ -26,11 +25,13 @@ class BezierCurve:
 
         self.curve = None
 
+    def axis_equation(self):
+        pass
+
     def draw(self, canvas: Canvas) -> None:
         ##self.sort_points()
         if self.curve is not None:
             self.canvas.delete(self.curve)
-        curve_points = []
 
         x_coordinates, y_coordinates = zip(*self.points)
         fortran_array = np.asfortranarray([x_coordinates, y_coordinates])
