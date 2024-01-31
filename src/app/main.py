@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 from PIL import Image, ImageTk
 
-from src.app.Axis import BezierCurve
+from Axis import BezierCurve
 
 
 class NomogramApp:
