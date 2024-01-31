@@ -1,5 +1,5 @@
 from tkinter import Canvas
-from maths_functions import *
+from maths_functions import ni,basis,calculate_angle
 from bezier import bezier
 
 
