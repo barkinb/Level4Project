@@ -6,3 +6,4 @@
 .idea
 src/nomograms
 
+src/app/__pycache__
