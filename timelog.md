@@ -184,7 +184,7 @@
 ## Week 1
 
 ### 13.01.2024
-* *5 hrs* refresh of research and combining more information about uses from a new paper
+* *5 hrs* dissertation writing + research
 
 ### 14.01.2024
 * *4 hrs* dissertation write up
@@ -196,4 +196,65 @@
 
 ### 16.01.2024
 * *.5 hrs* shows control points on axis'
+
+### 17.01.2024 
+* *1 hrs* rework on bezier curves to improve looks
+
+### 18.01.2024
+* *3 hrs* worked on moving points
+
+### 19.01.2024
+* *.5 hrs* Preparing presentation
+* *.5 hrs* supervisor meeting
+
+
+### 20.01.2024 
+
+* *5hrs* control points can now be moved, and their locations are stored accurately
+
+### 21.01.2024 
+
+* *3 hrs* trying to implement moving bezier curves with control points in real time
+
+### 22.01.2024 
+
+* *1 hrs* trying to fix the curve not automatically redrawing after moving a control point
+* *.5 hrs* Added automatic updating to the Bezier curve , need to work on midpoint detection
+* *1 hrs* working on trying to figure out how to sort out the curve shape after a third point is added (a third point that is in the "middle" of the previous two )
+
+### 23.01.2024
+* *1 hr* trying to fix the slow bezier drawing
+* *4 hrs* researching about pyqt for better usability and attempting some features over 
+
+### 24.01.2024 
+
+* *1 hr* trying the bezier package to work with my existing code
+
+### 25.01.2024
+* *1 hr* working on figuring out the equation for the axis
+* *1 hr* working on new UI prototype
+
+
+### 26.01.2024
+* *.5* Meeting preparation
+* *.5* Meeting DJHW
+* *2 hrs* working on new user interface and classes
+
+### 27.01.2024 
+* *1 hr* dissertation write up background section
+
+### 28.01.2024 
+* *1 hr* dissertation write up
+
+### 29.01.2024 
+* *2 hr* dissertation write up
+
+### 30.01.2024 
+
+* *2hrs* trying to implement the axis equation 
+
+### 31.01.2024 
+* *.5 hrs* code optimisation
+* *.5 hrs* used implicit axis function for the axis
+* *1 hrs* trying to setup github workflows 
 
