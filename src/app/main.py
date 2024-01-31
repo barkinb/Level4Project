@@ -112,7 +112,8 @@ class NomogramApp:
                                  lambda event, axis=axis_id, id=control_point_id: self.drag(event, axis, id))
             self.canvas.tag_bind(control_point_id, "<ButtonRelease-1>",
                                  lambda event, axis=axis_id, id=control_point_id: self.stop_drag(event, axis, id))
-
+        if axis_id in self.curve_objects: #if there is already a bezier curve
+            self.draw_bezier(axis_id)
         self.canvas.unbind("<Button-1>")
 
     def start_drag(self, event, axis_id, control_point_id):
@@ -138,7 +139,7 @@ class NomogramApp:
         control_point_index = int(control_point_id.split('_')[-1])
         self.control_points[axis_id][control_point_index] = (cur_x, cur_y)
 
-        # Update the bezier curve at the end
+        # Update the Bézier curve at the end
         self.update_bezier(axis_id)
 
     def stop_drag(self, event, axis_id, control_point_id):

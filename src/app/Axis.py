@@ -4,7 +4,7 @@ from bezier import bezier
 
 
 ##DISCLAIMER = a portion of code in this file originates from https://github.com/otto-kokstein/bezierve-v2
-NUMBER_OF_DETAIL = 10000
+NUMBER_OF_DETAIL = 50
 DEFAULT_CURVE_WIDTH = 2
 DEFAULT_CURVE_COLOUR = "#050505"
 
@@ -34,7 +34,7 @@ class BezierCurve:
     def draw(self, canvas: Canvas) -> None:
         ##self.sort_points()
         if self.curve is not None:
-            self.canvas.delete(self.curve)
+            canvas.delete(self.curve)
 
         x_coordinates, y_coordinates = zip(*self.points)
         fortran_array = np.asfortranarray([x_coordinates, y_coordinates])
