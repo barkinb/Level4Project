@@ -15,6 +15,8 @@ class BezierCurve:
     def __init__(self, name, points, canvas, width: int = DEFAULT_CURVE_WIDTH,
                  color: str = DEFAULT_CURVE_COLOUR) -> None:
 
+        self.symbolic_axis_equation = None
+        self.implicit_axis_equation = None
         self.curve_points = None
         self.curve_colour = DEFAULT_CURVE_COLOUR
         self.curve_width = DEFAULT_CURVE_WIDTH
@@ -26,6 +28,7 @@ class BezierCurve:
         self.curve = None
 
     def axis_equation(self):
+        
         pass
 
     def draw(self, canvas: Canvas) -> None:
@@ -40,10 +43,17 @@ class BezierCurve:
 
         points = self.curve_points.evaluate_multi(parameters)
         scaled_points = [(points[0][i],points[1][i]) for i in range(len(points[0]))]
-        # x,y = []
+        
+        self.symbolic_axis_equation = self.curve_points.to_symbolic()
+        self.implicit_axis_equation = self.curve_points.implicitize()
 
-        print(points)
-        print(scaled_points)
+        print(self.implicit_axis_equation)
+        print(self.symbolic_axis_equation)
+        
+        # x,y = []
+        #
+        # print(points)
+        # print(scaled_points)
         self.curve = canvas.create_line(*sum(scaled_points, ()), width=self.curve_width, fill=self.curve_colour)
 
 

@@ -191,8 +191,9 @@ class NomogramApp:
     def update_bezier(self,axis_id):
         if axis_id not in self.control_points:
             pass
-        if axis_id in self.control_points:
+        else:
             self.draw_bezier(axis_id)
+
 
     def pick_axis_point(self):
         self.canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
