@@ -40,20 +40,21 @@ class NomogramApp:
             self.axis_entry_icon = ImageTk.PhotoImage(self.axis_entry_img)
 
             self.select_button = tk.Button(toolbar_frame, image=self.select_icon, command=self.select_image_file)
-            self.control_point_button = tk.Button(toolbar_frame, image=self.control_point_icon, command=self.pick_control_point)
+            self.control_point_button = tk.Button(toolbar_frame, image=self.control_point_icon,
+                                                  command=self.pick_control_point)
             self.bezier_button = tk.Button(toolbar_frame, image=self.bezier_icon, command=self.draw_bezier)
-            self.axis_entry_button = tk.Button(toolbar_frame,image=self.axis_entry_icon, command=self.pick_axis_point)
+            self.axis_entry_button = tk.Button(toolbar_frame, image=self.axis_entry_icon, command=self.pick_axis_point)
             self.load_project_button = tk.Button(toolbar_frame, text="Load Project", command=self.load_project)
-            self.save_project_button = tk.Button(toolbar_frame,text="Save Project", command=self.save_project)
+            self.save_project_button = tk.Button(toolbar_frame, text="Save Project", command=self.save_project)
 
-            self.load_project_button.pack(side=tk.LEFT, padx=2, pady=2)
-            self.save_project_button.pack(side=tk.LEFT, padx=2, pady=2)
-            self.select_button.pack(side=tk.LEFT, padx=2, pady=2)
-            self.control_point_button.pack(side=tk.LEFT, padx=2, pady=2)
-            self.bezier_button.pack(side=tk.LEFT, padx=2, pady=2)
-            self.axis_entry_button.pack(side=tk.LEFT,padx=2, pady=2)
+            self.load_project_button.pack(side=tk.LEFT, padx=50, pady=2, fill=tk.X)
+            self.save_project_button.pack(side=tk.LEFT, padx=50, pady=2, fill=tk.X)
+            self.select_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            self.control_point_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            self.bezier_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            self.axis_entry_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
 
-            toolbar_frame.pack(side=tk.LEFT, fill=tk.X)
+            toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
             print("Error loading icon images:", e)
 
@@ -117,7 +118,7 @@ class NomogramApp:
                                  lambda event, axis=axis_id, id=control_point_id: self.drag(event, axis, id))
             self.canvas.tag_bind(control_point_id, "<ButtonRelease-1>",
                                  lambda event, axis=axis_id, id=control_point_id: self.stop_drag(event, axis, id))
-        if axis_id in self.curve_objects: #if there is already a bezier curve
+        if axis_id in self.curve_objects:  # if there is already a bezier curve
             self.draw_bezier(axis_id)
         self.canvas.unbind("<Button-1>")
 
@@ -150,7 +151,7 @@ class NomogramApp:
     def stop_drag(self, event, axis_id, control_point_id):
         # Update the control point's position in the data structure
         x, y = self.canvas.coords(control_point_id)[0], self.canvas.coords(control_point_id)[1]
-        
+
         control_point_index = int(control_point_id.split('_')[-1])
         self.control_points[axis_id][control_point_index] = (x, y)
 
@@ -172,16 +173,16 @@ class NomogramApp:
             coordinates_str = ""
             for axis_id, coords in self.axis_points.items():
                 coordinates_str += f"{axis_id}:\n"
-                coordinates_str += '\n'.join([f"  ({x}, {y})" for x, y in coords])
+                coordinates_str += '\n'.join([f"  ({x}, {y}, {point_value})" for x, y,point_value in coords])
                 coordinates_str += "\n\n"
             print(coordinates_str)
 
-
-    def draw_bezier(self, bezier_axis_id = None):
+    def draw_bezier(self, bezier_axis_id=None):
         if bezier_axis_id is None:
             bezier_axis_id = simpledialog.askstring("Enter Axis ID", "Enter the name of the axis you wish to draw:")
             while bezier_axis_id not in self.control_points:
-                bezier_axis_id = simpledialog.askstring("Axis Not Found", "Enter the name of the axis you wish to draw:")
+                bezier_axis_id = simpledialog.askstring("Axis Not Found",
+                                                        "Enter the name of the axis you wish to draw:")
 
         # Check if a BezierCurve object already exists for the axis
         if bezier_axis_id in self.curve_objects:
@@ -194,12 +195,11 @@ class NomogramApp:
 
         curve.draw(self.canvas)
 
-    def update_bezier(self,axis_id):
-        if axis_id not in self.control_points:
+    def update_bezier(self, axis_id):
+        if axis_id not in self.control_points or axis_id not in self.curve_objects:
             pass
         else:
             self.draw_bezier(axis_id)
-
 
     def pick_axis_point(self):
         self.canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
@@ -215,13 +215,18 @@ class NomogramApp:
                 if axis_id not in self.control_points.keys():
                     messagebox.showwarning("Curve Not Found", f"Bezier curve for axis '{axis_id}' does not exist.")
                     return
-
-                self.axis_points[axis_id].add_point((x, y), point_value)
+                if axis_id not in self.axis_points.keys():
+                    self.axis_points[axis_id] = []
+                self.axis_points[axis_id].append((x, y, point_value))
 
                 self.display_axis_coordinates()
+                point_size = 5
+                axis_point_id = f"{axis_id}_{len(self.axis_points[axis_id]) - 1}"
 
-                # Draw the updated Bézier curve
-                self.draw_bezier(axis_id)
+                self.canvas.create_oval(
+                    x - point_size, y - point_size, x + point_size, y + point_size,
+                    fill="red", outline="black", tags=(axis_id, axis_point_id, "axis_point")
+                )
 
         # Unbind the callback to stop capturing coordinates
         self.canvas.unbind("<Button-1>")
