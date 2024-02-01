@@ -43,12 +43,17 @@ class NomogramApp:
             self.control_point_button = tk.Button(toolbar_frame, image=self.control_point_icon, command=self.pick_control_point)
             self.bezier_button = tk.Button(toolbar_frame, image=self.bezier_icon, command=self.draw_bezier)
             self.axis_entry_button = tk.Button(toolbar_frame,image=self.axis_entry_icon, command=self.pick_axis_point)
+            self.load_project_button = tk.Button(toolbar_frame, text="Load Project", command=self.load_project)
+            self.save_project_button = tk.Button(toolbar_frame,text="Save Project", command=self.save_project)
 
+            self.load_project_button.pack(side=tk.LEFT, padx=2, pady=2)
+            self.save_project_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.select_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.control_point_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.bezier_button.pack(side=tk.LEFT, padx=2, pady=2)
             self.axis_entry_button.pack(side=tk.LEFT,padx=2, pady=2)
-            toolbar_frame.pack(side=tk.TOP, fill=tk.X)
+
+            toolbar_frame.pack(side=tk.LEFT, fill=tk.X)
         except Exception as e:
             print("Error loading icon images:", e)
 
@@ -215,12 +220,17 @@ class NomogramApp:
 
                 self.display_axis_coordinates()
 
-                # Draw the updated bezier curve
+                # Draw the updated Bézier curve
                 self.draw_bezier(axis_id)
 
         # Unbind the callback to stop capturing coordinates
         self.canvas.unbind("<Button-1>")
 
+    def load_project(self):
+        pass
+
+    def save_project(self):
+        pass
 
 
 if __name__ == "__main__":
