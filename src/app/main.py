@@ -210,11 +210,12 @@ class NomogramApp:
             x, y = event.x, event.y
 
             point_value = simpledialog.askfloat("Enter Point Value", "Enter the value for the selected point:")
-
+            # Unbind the callback to stop capturing coordinates
+            self.canvas.unbind("<Button-1>")
             if point_value is not None:
                 if axis_id not in self.control_points.keys():
                     messagebox.showwarning("Curve Not Found", f"Bezier curve for axis '{axis_id}' does not exist.")
-                    return
+
                 if axis_id not in self.axis_points.keys():
                     self.axis_points[axis_id] = []
                 self.axis_points[axis_id].append((x, y, point_value))
@@ -225,11 +226,10 @@ class NomogramApp:
 
                 self.canvas.create_oval(
                     x - point_size, y - point_size, x + point_size, y + point_size,
-                    fill="red", outline="black", tags=(axis_id, axis_point_id, "axis_point")
+                    fill="red", outline="black", tags=(axis_point_id, "axis_point")
                 )
 
-        # Unbind the callback to stop capturing coordinates
-        self.canvas.unbind("<Button-1>")
+
 
     def load_project(self):
         pass
