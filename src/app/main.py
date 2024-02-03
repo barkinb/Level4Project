@@ -3,7 +3,7 @@ from tkinter import filedialog, messagebox, simpledialog
 from PIL import Image, ImageTk
 
 from Axis import BezierCurve
-
+from DistributionParser import parse_distribution
 
 class NomogramApp:
     def __init__(self, root):
@@ -20,6 +20,7 @@ class NomogramApp:
         self.axis_points = {}
         self.curve_objects = {}
         self.create_toolbar()
+        self.distributions = {}
 
     def create_toolbar(self):
         # Create a frame to hold the toolbar buttons
@@ -53,10 +54,18 @@ class NomogramApp:
             self.control_point_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.bezier_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.axis_entry_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
-
+            self.distribution_label = tk.Label(toolbar_frame, text="Enter Distribution:")
+            self.distribution_entry = tk.Entry(toolbar_frame)
+            self.distribution_label.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            self.distribution_entry.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            self.save_distribution_button = tk.Button(toolbar_frame, text="Save Distribution",
+                                                      command=self.save_distribution)
+            
+            self.save_distribution_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
             print("Error loading icon images:", e)
+
 
     def select_image_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
@@ -229,6 +238,14 @@ class NomogramApp:
                     fill="red", outline="black", tags=(axis_point_id, "axis_point")
                 )
 
+    def save_distribution(self):
+        axis_id = simpledialog.askstring("Enter Axis ID", "Enter the identifier for the axis:")
+        distribution = self.distribution_entry.get()
+        if axis_id and distribution:
+            self.distributions[axis_id] = parse_distribution(distribution)
+            print(self.distributions[axis_id])
+            messagebox.showinfo("Distribution Saved",
+                                f"Statistical distribution '{distribution}' saved for axis '{axis_id}'.")
 
 
     def load_project(self):
