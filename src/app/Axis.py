@@ -4,7 +4,7 @@ from bezier import bezier
 import numpy as np
 
 
-##DISCLAIMER = a portion of code in this file originates from https://github.com/otto-kokstein/bezierve-v2
+##DISCLAIMER = a portion of code (calculate_max_4_control_points) in this file originates from https://github.com/otto-kokstein/bezierve-v2
 NUMBER_OF_DETAIL = 50
 DEFAULT_CURVE_WIDTH = 2
 DEFAULT_CURVE_COLOUR = "#050505"
@@ -16,6 +16,7 @@ class BezierCurve:
     def __init__(self, name, points, canvas, width: int = DEFAULT_CURVE_WIDTH,
                  color: str = DEFAULT_CURVE_COLOUR) -> None:
 
+        self.axis_points = []
         self.symbolic_axis_equation = None
         self.implicit_axis_equation = None
         self.curve_points = None
@@ -129,6 +130,13 @@ class BezierCurve:
             raise InvalidPointAmountError
 
         return round(point_x), round(point_y)
+
+    def add_axis_points(self,point):
+        self.axis_points.append(point)
+
+    def get_implicit_equation(self):
+        return self.implicit_axis_equation
+
 
     def __delete__(self, canvas):
         self.curve = None
