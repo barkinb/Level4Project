@@ -48,7 +48,8 @@ class BezierCurve:
         
         self.symbolic_axis_equation = self.curve_points.to_symbolic()
         self.implicit_axis_equation = self.curve_points.implicitize()
-
+        print(x_coordinates, y_coordinates)
+        print(fortran_array)
         print(self.implicit_axis_equation)
         print(self.symbolic_axis_equation)
         
