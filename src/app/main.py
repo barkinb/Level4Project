@@ -172,11 +172,13 @@ class NomogramApp:
 
         if "control" in point_id:
             self.control_points[axis_id][point_index] = (x, y)
+            self.update_bezier(axis_id)
             self.display_bezier_coordinates()
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (x, y, self.axis_points[axis_id][point_index][-1])
-            self.display_axis_coordinates()
+
             self.update_bezier(axis_id)
+            self.display_axis_coordinates()
 
     def display_bezier_coordinates(self):
         # prints the control points to console
