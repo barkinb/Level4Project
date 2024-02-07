@@ -2,24 +2,24 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 from PIL import Image, ImageTk
 
-from Axis import BezierCurve
+from NomogramAxis import Axis
 from DistributionParser import parse_distribution
 
 
 class NomogramApp:
-    def __init__(self, root):
+    def __init__(self, root_window):
         self.current_point_id = None
         self.start_y = None
         self.start_x = None
         self.button_status = tk.NORMAL
-        self.root = root
+        self.root = root_window
         self.root.geometry("1280x800")
         self.root.title("Probabilistic Nomograms")
         self.canvas = None
         self.original_img = None
         self.control_points = {}
         self.axis_points = {}
-        self.curve_objects = {}
+        self.nomogram_axes = {}
         self.create_toolbar()
         self.distributions = {}
 
@@ -102,6 +102,10 @@ class NomogramApp:
     def pick_control_point(self):
         self.canvas.bind("<Button-1>", self.capture_bezier_coordinates)
 
+    def pick_axis_point(self):
+        self.canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
+
+
     def capture_bezier_coordinates(self, event):
         axis_id = simpledialog.askstring("Enter Axis ID", "Enter an identifier for the axis:")
         if axis_id is not None:
@@ -121,11 +125,13 @@ class NomogramApp:
             )
 
             # Bind events only for the newly created control point
-            self.move_point( control_point_id, axis_id)
+            self.move_point(control_point_id, axis_id)
 
-        if axis_id in self.curve_objects:  # if there is already a bezier curve
+        if axis_id in self.nomogram_axes:  # if there is already a bezier curve
             self.draw_bezier(axis_id)
+            self.update_points(axis_id)
         self.canvas.unbind("<Button-1>")
+
 
     def move_point(self, point_id, axis_id):
         self.canvas.tag_bind(point_id, "<Button-1>",
@@ -176,8 +182,7 @@ class NomogramApp:
             self.display_bezier_coordinates()
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (x, y, self.axis_points[axis_id][point_index][-1])
-
-            self.update_bezier(axis_id)
+            self.update_axis(axis_id)
             self.display_axis_coordinates()
 
     def display_bezier_coordinates(self):
@@ -208,24 +213,21 @@ class NomogramApp:
                                                         "Enter the name of the axis you wish to draw:")
 
         # Check if a BezierCurve object already exists for the axis
-        if bezier_axis_id in self.curve_objects:
-            curve = self.curve_objects[bezier_axis_id]
-            curve.points = self.control_points[bezier_axis_id]  # Update the control points
+        if bezier_axis_id in self.nomogram_axes:
+            curve = self.nomogram_axes[bezier_axis_id]
+            curve.control_points = self.control_points[bezier_axis_id]  # Update the control points
         else:
             # Create a new BezierCurve object
-            curve = BezierCurve(bezier_axis_id, self.control_points[bezier_axis_id], self.canvas)
-            self.curve_objects[bezier_axis_id] = curve
+            curve = Axis(bezier_axis_id, self.control_points[bezier_axis_id], self.canvas)
+            self.nomogram_axes[bezier_axis_id] = curve
 
         curve.draw(self.canvas)
 
     def update_bezier(self, axis_id):
-        if axis_id not in self.control_points or axis_id not in self.curve_objects:
+        if axis_id not in self.control_points or axis_id not in self.nomogram_axes:
             pass
         else:
             self.draw_bezier(axis_id)
-
-    def pick_axis_point(self):
-        self.canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
 
     def capture_axis_point_coordinates(self, event):
         axis_id = simpledialog.askstring("Enter Axis ID", "Enter the identifier for the axis:")
@@ -251,7 +253,9 @@ class NomogramApp:
                     x - point_size, y - point_size, x + point_size, y + point_size,
                     fill="red", outline="black", tags=(axis_point_id, "axis_point")
                 )
-                self.move_point( axis_point_id, axis_id)
+                self.move_point(axis_point_id, axis_id)
+            self.update_points(axis_id)
+            self.update_axis( axis_id)
             self.canvas.unbind("<Button-1>")
 
     def save_distribution(self):
@@ -268,6 +272,14 @@ class NomogramApp:
 
     def save_project(self):
         pass
+
+    def update_axis(self, axis_id):
+        if len(self.axis_points[axis_id]) > 0:
+            self.nomogram_axes[axis_id].fit_axis_equation()
+
+    def update_points(self, axis_id):
+        self.nomogram_axes[axis_id].set_axis_points(self.axis_points[axis_id])
+        self.nomogram_axes[axis_id].set_control_points(self.control_points[axis_id])
 
 
 if __name__ == "__main__":
