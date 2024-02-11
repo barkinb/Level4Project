@@ -180,9 +180,10 @@ class NomogramApp:
             self.control_points[axis_id][point_index] = (x, y)
             self.update_bezier(axis_id)
             self.display_bezier_coordinates()
+            self.update_points(axis_id)
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (x, y, self.axis_points[axis_id][point_index][-1])
-            self.update_axis(axis_id)
+            self.update_points(axis_id)
             self.display_axis_coordinates()
 
     def display_bezier_coordinates(self):
@@ -240,7 +241,6 @@ class NomogramApp:
             if point_value is not None:
                 if axis_id not in self.control_points.keys():
                     messagebox.showwarning("Curve Not Found", f"Bezier curve for axis '{axis_id}' does not exist.")
-                    pass
                 elif axis_id not in self.axis_points.keys():
                     self.axis_points[axis_id] = []
                 self.axis_points[axis_id].append((x, y, point_value))
@@ -251,11 +251,10 @@ class NomogramApp:
 
                 self.canvas.create_oval(
                     x - point_size, y - point_size, x + point_size, y + point_size,
-                    fill="red", outline="black", tags=(axis_point_id, "axis_point")
+                    fill="yellow", outline="black", tags=(axis_point_id, "axis_point")
                 )
                 self.move_point(axis_point_id, axis_id)
             self.update_points(axis_id)
-            self.update_axis( axis_id)
             self.canvas.unbind("<Button-1>")
 
     def save_distribution(self):
@@ -273,14 +272,10 @@ class NomogramApp:
     def save_project(self):
         pass
 
-    def update_axis(self, axis_id):
-        if len(self.axis_points[axis_id]) > 0:
-            self.nomogram_axes[axis_id].fit_axis_equation()
-
     def update_points(self, axis_id):
         self.nomogram_axes[axis_id].set_axis_points(self.axis_points[axis_id])
         self.nomogram_axes[axis_id].set_control_points(self.control_points[axis_id])
-
+        self.nomogram_axes[axis_id].start_show_axis_points_canvas()
 
 if __name__ == "__main__":
     root = tk.Tk()
