@@ -1,12 +1,15 @@
 from tkinter import Canvas
+import scipy
+import sympy
+from sympy import symbols
 from maths_functions import calculate_angle, objective_function, fitting_function
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, fsolve
 from bezier import bezier
 import numpy as np
 
 NUMBER_OF_DETAIL = 50
 DEFAULT_CURVE_WIDTH = 2
-DEFAULT_CURVE_COLOUR = "#050505"
+DEFAULT_CURVE_COLOUR = "blue"
 
 InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 
@@ -14,6 +17,13 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 class Axis:
     def __init__(self, name, control_points, canvas, width: int = DEFAULT_CURVE_WIDTH,
                  color: str = DEFAULT_CURVE_COLOUR) -> None:
+        self.initial_guess = None
+        self.xy_values = None
+        self.x, self.y = sympy.symbols('x y')
+
+        self.axis_values = None
+        self.diffs = None
+        self.axis_equation = None
         self.axis_points = []
         self.symbolic_axis_equation = None
         self.implicit_axis_equation = None
@@ -24,11 +34,7 @@ class Axis:
         self.control_points = control_points
         self.no_points = len(self.control_points)
         self.canvas = canvas
-
         self.curve = None
-
-    def axis_equation(self):
-        pass
 
     def draw(self, canvas: Canvas) -> None:
         if self.curve is not None:
@@ -61,21 +67,43 @@ class Axis:
         self.control_points = control_points
 
     def get_implicit_equation(self):
+        # calculates the implicit value
         return self.implicit_axis_equation
 
+    def calculate_implicit_equation(self):
+        return lambda x, y: self.implicit_axis_equation.subs([(self.x, x), (self.y, y)])
+
     def fit_axis_equation(self):
+        self.initial_guess = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+        self.xy_values = np.array([(point[0], point[1]) for point in self.axis_points])
+        self.axis_values = np.array([point[2] for point in self.axis_points])
+        self.diffs = np.diff(self.axis_values)
 
-        initial_guess = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-        xy_values = np.array([(point[0], point[1]) for point in self.axis_points])
-        axis_values = np.array([point[2] for point in self.axis_points])
-        diffs = np.diff(axis_values)
-
-        result = least_squares(objective_function, initial_guess, args=(xy_values, axis_values,diffs))
+        result = least_squares(objective_function, self.initial_guess,
+                               args=(self.xy_values, self.axis_values, self.diffs))
 
         popt = result.x
         print("Coefficients:", popt)
 
-        print(fitting_function(popt, xy_values, diffs))
+        print(fitting_function(popt, self.xy_values, self.diffs))
+#       print(self.calculate_implicit_equation()(self.xy_values[0],self.xy_values[1]))
+        self.axis_equation_coefficients = popt
+
+    def find_axis_point(self, axis_value):
+        def equations(variables, axis_value):
+            x, y = variables
+            print(x,y)
+            # evaluate the axis value
+            curve_value = fitting_function(self.axis_equation_coefficients, np.array([x, y]), self.diffs) - axis_value
+            # get the implicit equation value
+            implicit_value = self.calculate_implicit_equation()(x, y)
+            print(curve_value, implicit_value)
+            return np.concatenate([curve_value, [implicit_value - axis_value]])
+
+        initial_guess = np.array([0, 0])
+        solution = fsolve(equations, initial_guess, args=axis_value)
+        print(solution)
+        return solution[0], solution[1]
 
     def __delete__(self, canvas):
         self.curve = None
