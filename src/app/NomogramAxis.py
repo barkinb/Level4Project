@@ -1,11 +1,11 @@
 from tkinter import Canvas
-import scipy
-import sympy
-from sympy import symbols
-from maths_functions import calculate_angle, objective_function, fitting_function
-from scipy.optimize import least_squares, fsolve
-from bezier import bezier
+
 import numpy as np
+import sympy
+from bezier import bezier
+from scipy.optimize import least_squares, fsolve
+
+from maths_functions import objective_function, fitting_function
 
 NUMBER_OF_DETAIL = 50
 DEFAULT_CURVE_WIDTH = 2
@@ -16,7 +16,9 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 
 class Axis:
     def __init__(self, name, control_points, canvas, width: int = DEFAULT_CURVE_WIDTH,
-                 color: str = DEFAULT_CURVE_COLOUR) -> None:
+                 colour: str = DEFAULT_CURVE_COLOUR) -> None:
+        self.colour = colour
+        self.width = width
         self.initial_guess = None
         self.xy_values = None
         self.x, self.y = sympy.symbols('x y')
