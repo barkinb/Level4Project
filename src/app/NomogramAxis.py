@@ -6,6 +6,7 @@ from bezier import bezier
 from scipy.optimize import least_squares, fsolve
 
 from maths_functions import objective_function, fitting_function
+from DistributionParser import parse_distribution
 
 NUMBER_OF_DETAIL = 50
 DEFAULT_CURVE_WIDTH = 2
@@ -17,6 +18,9 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 class Axis:
     def __init__(self, name, control_points, canvas, width: int = DEFAULT_CURVE_WIDTH,
                  colour: str = DEFAULT_CURVE_COLOUR) -> None:
+        self.scaled_points = None
+        self.axis_equation_degree = None
+        self.distribution = None
         self.axis_points_generated = False
         self.axis_equation_generated = False
         self.axis_equation_coefficients = None
@@ -53,7 +57,6 @@ class Axis:
         points = self.curve_points.evaluate_multi(parameters)
         self.scaled_points = [(points[0][i], points[1][i]) for i in range(len(points[0]))]
 
-        self.symbolic_axis_equation = self.curve_points.to_symbolic()
         self.implicit_axis_equation = self.curve_points.implicitize()
         self.curve = canvas.create_line(*sum(self.scaled_points, ()), width=self.curve_width, fill=self.curve_colour)
 
@@ -62,7 +65,7 @@ class Axis:
 
     def set_axis_points(self, axis_points):
         self.axis_points = axis_points
-        if len(self.axis_points) > 0:
+        if len(self.axis_points) > 2:
             self.fit_axis_equation()
 
     def set_control_points(self, control_points):
@@ -77,7 +80,7 @@ class Axis:
 
     def fit_axis_equation(self):
 
-        self.initial_guess = [0.0]*8
+        self.initial_guess = [0.0] * 8
         self.xy_values = np.array([(point[0], point[1]) for point in self.axis_points])
         self.axis_values = np.array([point[2] for point in self.axis_points])
         self.diffs = np.diff(self.axis_values)
@@ -90,18 +93,29 @@ class Axis:
         self.axis_equation_generated = True
 
     def find_axis_point(self, axis_value):
+
         def equations(variables):
             x, y = variables
-            # evaluate the axis value
+            # Evaluate the curve value and implicit value
             curve_value = fitting_function(self.axis_equation_coefficients, np.array([x, y]), self.diffs) - axis_value
-            # get the implicit equation value from the Bézier curve
             implicit_value = self.calculate_implicit_equation()(x, y)
-            return np.concatenate([curve_value, [implicit_value - axis_value]])
+            return [curve_value, implicit_value - axis_value]
 
         initial_guess = np.array([0, 0])
-        solution = fsolve(equations, initial_guess, args=axis_value)
-        self.axis_equation_generated = True
-        return solution[0], solution[1]
+        solution = fsolve(equations, initial_guess)
+
+        curve_value_at_solution = fitting_function(self.axis_equation_coefficients,
+                                                   np.array([solution[0], solution[1]]), self.diffs)
+        implicit_value_at_solution = self.calculate_implicit_equation()(solution[0], solution[1])
+        tolerance = 1e-6
+
+        if np.abs(curve_value_at_solution - axis_value) < tolerance and np.abs(
+                implicit_value_at_solution - axis_value) < tolerance:
+            return solution[0], solution[1]
+
+        else:
+            print("below tolerance")
+            return solution[0], solution[1]
 
     def start_show_axis_points_canvas(self) -> None:
 
@@ -112,14 +126,15 @@ class Axis:
 
         if self.axis_points_generated:
             self.canvas.delete(f"axis_values_{self.name}")
-        self.draw_estimated_axis_points()
+        if len(self.axis_points) > 2:
+            self.draw_estimated_axis_points()
 
     def draw_estimated_axis_points(self):
-        random_points = self.scaled_points[::10] # will show 5 values guessed by the program
+        random_points = self.scaled_points[::10]  # will show 5 values guessed by the program
         for i, (x, y) in enumerate(random_points):
             x_float, y_float = float(x), float(y)
             # Calculate the corresponding axis value using your fitting function
-            axis_value = fitting_function(self.axis_equation_coefficients, np.array([(x, y)]), self.diffs)[0]
+            axis_value = fitting_function(self.axis_equation_coefficients, np.array([x, y]), self.diffs)
 
             # Display the axis value next to the point
             text_x = x_float + 5
@@ -130,7 +145,15 @@ class Axis:
             self.canvas.create_text(text_x, text_y, anchor="nw",
                                     text=f"{axis_value}", fill="black",
                                     tags=f"axis_values_{self.name}")
+            print(self.find_axis_point(axis_value))
         self.axis_points_generated = True
+
+    def add_distribution(self, distribution_str):
+        self.distribution = parse_distribution(distribution_str)
+
+    def get_distribution(self):
+        return self.distribution
+
     def __delete__(self, canvas):
         self.curve = None
         canvas.delete(self.curve)
