@@ -121,7 +121,7 @@ class NomogramApp:
 
             self.canvas.create_oval(
                 x - point_size, y - point_size, x + point_size, y + point_size,
-                fill="red", outline="black", tags=(control_point_id, "control_point")
+                fill="orange", outline="black", tags=(control_point_id, "control_point")
             )
 
             # Bind events only for the newly created control point
@@ -262,6 +262,7 @@ class NomogramApp:
         distribution = self.distribution_entry.get()
         if axis_id and distribution:
             self.distributions[axis_id] = parse_distribution(distribution)
+            self.nomogram_axes[axis_id].find_axis_point(0.3)
             print(self.distributions[axis_id])
             messagebox.showinfo("Distribution Saved",
                                 f"Statistical distribution '{distribution}' saved for axis '{axis_id}'.")
