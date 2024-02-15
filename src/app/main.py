@@ -22,7 +22,6 @@ class NomogramApp:
         self.current_point_id = None
         self.start_y = None
         self.start_x = None
-        self.button_status = tk.NORMAL
         self.root = root_window
         self.root.geometry("1280x800")
         self.root.title("Probabilistic Nomograms")
@@ -336,14 +335,14 @@ class NomogramApp:
             self.nomogram_canvas.unbind("<Button-1>")
 
     def save_distribution(self):
-        axis_id = simpledialog.askstring("Enter Axis ID", "Enter the identifier for the axis:")
         distribution_text = self.distribution_entry.get()
+        axis_id = self.axis_id_variable.get()
         if axis_id and distribution_text:
             try:
                 self.nomogram_axes[axis_id].add_distribution(distribution_text)
             except Exception as e:
-                messagebox.showerror("Error : No Axis with this identifier exists", "")
-                print(e)
+                messagebox.showerror("Error : No Axis with this identifier exists", str(e))
+
         self.update_left_panel_content()
 
     def load_project(self):

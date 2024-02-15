@@ -1,3 +1,4 @@
+import traceback
 from tkinter import Canvas, messagebox
 
 import numpy as np
@@ -5,7 +6,7 @@ import sympy
 from bezier import bezier
 from scipy.optimize import least_squares, fsolve
 
-from maths_functions import objective_function, fitting_function
+from src.app.utils.maths_functions import objective_function, fitting_function
 from DistributionParser import parse_distribution
 
 NUMBER_OF_DETAIL = 50
@@ -109,7 +110,7 @@ class Axis:
         curve_value_at_solution = fitting_function(self.axis_equation_coefficients,
                                                    np.array([solution[0], solution[1]]), self.diffs)
         implicit_value_at_solution = self.calculate_implicit_equation()(solution[0], solution[1])
-        tolerance = 1e-6
+        tolerance = 1e-2
 
         if np.abs(curve_value_at_solution - axis_value) < tolerance and np.abs(
                 implicit_value_at_solution - axis_value) < tolerance:
@@ -153,13 +154,39 @@ class Axis:
     def add_distribution(self, distribution_str):
         try:
             self.distribution = parse_distribution(distribution_str)
-            x_values = np.linspace(self.scaled_points[0], self.axis_points[-1], 100)
-            y_values = self.distribution.pdf(x_values)
-            scaled_points = [(self.canvas.canvasx(x), self.canvas.canvasy(y)) for x, y in zip(x_values, y_values)]
-            self.statistics_curve = self.canvas.create_line(*sum(scaled_points, ()), width=self.curve_width, fill="green")
-            self.canvas.tag_bind(self.statistics_curve, "<Button-1>", self.show_distribution_info)
+
+            intervals = np.linspace(0, len(self.scaled_points) - 1, 50, dtype=int)
+
+            scaled_values = []
+
+            # Iterate over each interval
+            for i in intervals:
+                # get the scaled point
+                scaled_point = self.scaled_points[i]
+
+                # Use fitting_function to find the axis_value
+                axis_value = fitting_function(self.axis_equation_coefficients, np.array([scaled_point]), self.diffs)
+
+                # Use self.distribution.pdf to find the probability density
+                probability_density = self.distribution.pdf(axis_value)
+
+                scaled_values.append(probability_density)
+                x1 = scaled_point[0] - self.curve_width * probability_density / 2
+                y1 = scaled_point[1] - self.curve_width * probability_density / 2
+                x2 = scaled_point[0] + self.curve_width * probability_density / 2
+                y2 = scaled_point[1] + self.curve_width * probability_density / 2
+                x1_scalar = x1[0]
+                y1_scalar = y1[0]
+                x2_scalar = x2[0]
+                y2_scalar = y2[0]
+
+                # Create the oval on the canvas
+                self.canvas.create_oval(x1_scalar, y1_scalar, x2_scalar, y2_scalar, fill="green",
+                                        tags=f"statistics_curve_{self.name}")
+
 
         except Exception as e:
+            print(traceback.print_exc())
             print(f"Error adding distribution: {e}")
 
     def show_distribution_info(self, event):
