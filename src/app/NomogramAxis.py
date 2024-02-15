@@ -1,4 +1,4 @@
-from tkinter import Canvas
+from tkinter import Canvas, messagebox
 
 import numpy as np
 import sympy
@@ -18,6 +18,7 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 class Axis:
     def __init__(self, name, control_points, canvas, width: int = DEFAULT_CURVE_WIDTH,
                  colour: str = DEFAULT_CURVE_COLOUR) -> None:
+        self.statistics_curve = None
         self.scaled_points = None
         self.axis_equation_degree = None
         self.distribution = None
@@ -149,8 +150,27 @@ class Axis:
         self.axis_points_generated = True
 
     def add_distribution(self, distribution_str):
-        self.distribution = parse_distribution(distribution_str)
+        try:
+            self.distribution = parse_distribution(distribution_str)
+            print(self.distribution)
+            x_values = np.linspace(self.scaled_points[0], self.axis_points[-1], 100)
+            y_values = self.distribution.pdf(x_values)
+            scaled_points = [(self.canvas.canvasx(x), self.canvas.canvasy(y)) for x, y in zip(x_values, y_values)]
+            self.statistics_curve = self.canvas.create_line(*sum(scaled_points, ()), width=self.curve_width, fill="green")
 
+            self.canvas.tag_bind(self.statistics_curve, "<Button-1>", self.show_distribution_info)
+
+        except Exception as e:
+            print(f"Error adding distribution: {e}")
+
+    def show_distribution_info(self, event):
+        try:
+            if self.distribution:
+                messagebox.showinfo("Distribution Info", str(self.distribution))
+            else:
+                messagebox.showwarning("No Distribution", "No distribution found for this axis")
+        except Exception as e:
+            print(f"Error showing distribution info: {e}")
     def get_distribution(self):
         return self.distribution
 

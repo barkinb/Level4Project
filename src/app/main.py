@@ -21,7 +21,6 @@ class NomogramApp:
         self.axis_points = {}
         self.nomogram_axes = {}
         self.create_toolbar()
-        self.distributions = {}
 
     def create_toolbar(self):
         # Create a frame to hold the toolbar buttons
@@ -259,13 +258,9 @@ class NomogramApp:
 
     def save_distribution(self):
         axis_id = simpledialog.askstring("Enter Axis ID", "Enter the identifier for the axis:")
-        distribution = self.distribution_entry.get()
-        if axis_id and distribution:
-            self.distributions[axis_id] = parse_distribution(distribution)
-            self.nomogram_axes[axis_id].find_axis_point(0.3)
-            print(self.distributions[axis_id])
-            messagebox.showinfo("Distribution Saved",
-                                f"Statistical distribution '{distribution}' saved for axis '{axis_id}'.")
+        distribution_text = self.distribution_entry.get()
+        if axis_id and distribution_text:
+            self.nomogram_axes[axis_id].add_distribution(distribution_text)
 
     def load_project(self):
         pass
