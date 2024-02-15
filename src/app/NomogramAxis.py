@@ -152,12 +152,10 @@ class Axis:
     def add_distribution(self, distribution_str):
         try:
             self.distribution = parse_distribution(distribution_str)
-            print(self.distribution)
             x_values = np.linspace(self.scaled_points[0], self.axis_points[-1], 100)
             y_values = self.distribution.pdf(x_values)
             scaled_points = [(self.canvas.canvasx(x), self.canvas.canvasy(y)) for x, y in zip(x_values, y_values)]
             self.statistics_curve = self.canvas.create_line(*sum(scaled_points, ()), width=self.curve_width, fill="green")
-
             self.canvas.tag_bind(self.statistics_curve, "<Button-1>", self.show_distribution_info)
 
         except Exception as e:
@@ -171,6 +169,7 @@ class Axis:
                 messagebox.showwarning("No Distribution", "No distribution found for this axis")
         except Exception as e:
             print(f"Error showing distribution info: {e}")
+
     def get_distribution(self):
         return self.distribution
 
