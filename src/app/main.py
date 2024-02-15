@@ -32,10 +32,10 @@ class NomogramApp:
         self.nomogram_axes = {}
         self.create_toolbar()
         self.create_left_panel()
-        root_window.bind('l', lambda event: self.select_image_file())
-        root_window.bind('c', lambda event: self.pick_control_point())
-        root_window.bind('b', lambda event: self.draw_bezier())
-        root_window.bind('a', lambda event: self.pick_axis_point())
+        root_window.bind('<Control-l>', lambda event: self.select_image_file())
+        root_window.bind('<Control-c>', lambda event: self.pick_control_point())
+        root_window.bind('<Control-b>', lambda event: self.draw_bezier())
+        root_window.bind('<Control-a>', lambda event: self.pick_axis_point())
 
     def create_toolbar(self):
         # Create a frame to hold the toolbar buttons
@@ -67,13 +67,13 @@ class NomogramApp:
 
             self.save_project_button.pack(side=tk.LEFT, padx=5, pady=2, fill=tk.X)
             self.select_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
-            ToolTip(self.select_button, "Load Project - shortcut : l")
+            ToolTip(self.select_button, "Load Nomogram Image - shortcut : Control-l")
             self.control_point_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
-            ToolTip(self.control_point_button, "Select Control Point - shortcut : c")
+            ToolTip(self.control_point_button, "Select Control Point - shortcut : Control-c")
             self.bezier_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
-            ToolTip(self.bezier_button, "Draw Bezier Curve - shortcut : b")
+            ToolTip(self.bezier_button, "Draw Bezier Curve - shortcut : Control-b")
             self.axis_entry_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
-            ToolTip(self.axis_entry_button, "Enter a Point on the Axis - shortcut : a")
+            ToolTip(self.axis_entry_button, "Enter a Point on the Axis - shortcut : Control-a")
 
             self.axis_label = tk.Label(toolbar_frame, text="Select Axis:")
             self.axis_label.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
