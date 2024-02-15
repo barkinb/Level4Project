@@ -5,8 +5,11 @@ from PIL import Image, ImageTk
 
 from NomogramAxis import Axis
 
+
 class NomogramApp:
     def __init__(self, root_window):
+        self.axis_id_variable = None
+        self.axis_label = None
         self.title = None
         self.left_panel_canvas = None
         self.left_panel_inner_frame = None
@@ -57,18 +60,26 @@ class NomogramApp:
             self.save_project_button = tk.Button(toolbar_frame, text="Save Project", command=self.save_project)
 
             self.load_project_button.pack(side=tk.LEFT, padx=50, pady=2, fill=tk.X)
-            self.save_project_button.pack(side=tk.LEFT, padx=50, pady=2, fill=tk.X)
+            self.save_project_button.pack(side=tk.LEFT, padx=5, pady=2, fill=tk.X)
             self.select_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.control_point_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.bezier_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.axis_entry_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+
+            self.axis_label = tk.Label(toolbar_frame, text="Select Axis:")
+            self.axis_label.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            self.axis_id_variable = tk.StringVar(toolbar_frame)
+            self.axis_id_variable.set("Select axis:")
+
+            self.axis_id_dropdown = tk.OptionMenu(toolbar_frame, self.axis_id_variable,*["Select axis:"])
+            self.axis_id_dropdown.pack(side=tk.LEFT, padx=5, pady=2, fill=tk.X)
+            self.populate_axis_id_dropdown()
             self.distribution_label = tk.Label(toolbar_frame, text="Enter Distribution:")
             self.distribution_entry = tk.Entry(toolbar_frame)
             self.distribution_label.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.distribution_entry.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.save_distribution_button = tk.Button(toolbar_frame, text="Save Distribution",
                                                       command=self.save_distribution)
-
             self.save_distribution_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
@@ -126,6 +137,26 @@ class NomogramApp:
     def on_frame_configure(self):
         self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
 
+    def populate_axis_id_dropdown(self):
+        if self.control_points:
+            self.axis_id_dropdown['menu'].delete(0, 'end')
+            self.axis_id_dropdown['menu'].add_separator()
+
+        self.axis_id_dropdown['menu'].add_command(label="Add a new axis", command=self.add_new_axis_id)
+
+    def set_axis_id(self, axis_id):
+        self.axis_id_variable.set(axis_id)
+
+    def add_new_axis_id(self):
+        new_axis_id = simpledialog.askstring("Add New Axis ID", "Enter a new axis ID:")
+        if new_axis_id not in self.control_points:
+            self.control_points[new_axis_id] = []
+            self.axis_id_dropdown['menu'].add_command(label=new_axis_id,
+                                                      command=lambda: self.set_axis_id(new_axis_id))
+            self.axis_id_variable.set(new_axis_id)
+        else:
+            new_axis_id = messagebox.showerror("Error", "This Axis ID already exists")
+            self.add_new_axis_id()
     def select_image_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
         try:
@@ -152,7 +183,8 @@ class NomogramApp:
         if self.nomogram_canvas:
             self.nomogram_canvas = None
             self.original_img = None
-        self.nomogram_canvas = tk.Canvas(self.root, width=image.width + 50, height=image.height + 50, background="white")
+        self.nomogram_canvas = tk.Canvas(self.root, width=image.width + 50, height=image.height + 50,
+                                         background="white")
         self.nomogram_canvas.pack()
         photo = ImageTk.PhotoImage(image=image)
         self.nomogram_canvas.create_image(25, 25, anchor=tk.NW, image=photo)
@@ -165,12 +197,10 @@ class NomogramApp:
         self.nomogram_canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
 
     def capture_bezier_coordinates(self, event):
-        axis_id = simpledialog.askstring("Enter Axis ID", "Enter an identifier for the axis:")
+        axis_id = self.axis_id_variable.get()
         if axis_id is not None:
             x, y = event.x, event.y
 
-            if axis_id not in self.control_points:
-                self.control_points[axis_id] = []
             self.control_points[axis_id].append((x, y))
 
             point_size = 5
@@ -242,14 +272,10 @@ class NomogramApp:
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (x, y, self.axis_points[axis_id][point_index][-1])
             self.update_points(axis_id)
+        self.update_left_panel_content()
 
     def draw_bezier(self, bezier_axis_id=None):
-        if bezier_axis_id is None:
-            bezier_axis_id = simpledialog.askstring("Enter Axis ID", "Enter the name of the axis you wish to draw:")
-            if bezier_axis_id not in self.control_points:
-                bezier_axis_id = simpledialog.askstring("Axis Not Found",
-                                                        "Enter the name of the axis you wish to draw:")
-
+        bezier_axis_id = self.axis_id_variable.get()
         # Check if a BezierCurve object already exists for the axis
         if bezier_axis_id in self.nomogram_axes:
             curve = self.nomogram_axes[bezier_axis_id]
@@ -268,7 +294,7 @@ class NomogramApp:
             self.draw_bezier(axis_id)
 
     def capture_axis_point_coordinates(self, event):
-        axis_id = simpledialog.askstring("Enter Axis ID", "Enter the identifier for the axis:")
+        axis_id = self.axis_id_variable.get()
         if axis_id is not None:
             x, y = event.x, event.y
 
@@ -304,9 +330,10 @@ class NomogramApp:
             try:
                 self.nomogram_axes[axis_id].add_distribution(distribution_text)
             except Exception as e:
-                messagebox.showerror("Error : No Axis with this identifier exists")
+                messagebox.showerror("Error : No Axis with this identifier exists", "")
                 print(e)
         self.update_left_panel_content()
+
     def load_project(self):
         pass
 

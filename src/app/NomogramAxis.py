@@ -92,6 +92,7 @@ class Axis:
         popt = result.x
         self.axis_equation_coefficients = popt
         self.axis_equation_generated = True
+        self.start_show_axis_points_canvas()
 
     def find_axis_point(self, axis_value):
 
