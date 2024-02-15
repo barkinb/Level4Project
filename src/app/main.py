@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
-
+from tktooltip import ToolTip
 from PIL import Image, ImageTk
 
 from NomogramAxis import Axis
@@ -8,6 +8,7 @@ from NomogramAxis import Axis
 
 class NomogramApp:
     def __init__(self, root_window):
+
         self.axis_id_variable = None
         self.axis_label = None
         self.title = None
@@ -32,6 +33,10 @@ class NomogramApp:
         self.nomogram_axes = {}
         self.create_toolbar()
         self.create_left_panel()
+        root_window.bind('l', lambda event: self.select_image_file())
+        root_window.bind('c', lambda event: self.pick_control_point())
+        root_window.bind('b', lambda event: self.draw_bezier())
+        root_window.bind('a', lambda event: self.pick_axis_point())
 
     def create_toolbar(self):
         # Create a frame to hold the toolbar buttons
@@ -60,18 +65,23 @@ class NomogramApp:
             self.save_project_button = tk.Button(toolbar_frame, text="Save Project", command=self.save_project)
 
             self.load_project_button.pack(side=tk.LEFT, padx=50, pady=2, fill=tk.X)
+
             self.save_project_button.pack(side=tk.LEFT, padx=5, pady=2, fill=tk.X)
             self.select_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            ToolTip(self.select_button, "Load Project - shortcut : l")
             self.control_point_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            ToolTip(self.control_point_button, "Select Control Point - shortcut : c")
             self.bezier_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            ToolTip(self.bezier_button, "Draw Bezier Curve - shortcut : b")
             self.axis_entry_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+            ToolTip(self.axis_entry_button, "Enter a Point on the Axis - shortcut : a")
 
             self.axis_label = tk.Label(toolbar_frame, text="Select Axis:")
             self.axis_label.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.axis_id_variable = tk.StringVar(toolbar_frame)
             self.axis_id_variable.set("Select axis:")
 
-            self.axis_id_dropdown = tk.OptionMenu(toolbar_frame, self.axis_id_variable,*["Select axis:"])
+            self.axis_id_dropdown = tk.OptionMenu(toolbar_frame, self.axis_id_variable, *["Select axis:"])
             self.axis_id_dropdown.pack(side=tk.LEFT, padx=5, pady=2, fill=tk.X)
             self.populate_axis_id_dropdown()
             self.distribution_label = tk.Label(toolbar_frame, text="Enter Distribution:")
@@ -81,6 +91,7 @@ class NomogramApp:
             self.save_distribution_button = tk.Button(toolbar_frame, text="Save Distribution",
                                                       command=self.save_distribution)
             self.save_distribution_button.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
+
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
             print("Error:", e)
@@ -157,6 +168,7 @@ class NomogramApp:
         else:
             new_axis_id = messagebox.showerror("Error", "This Axis ID already exists")
             self.add_new_axis_id()
+
     def select_image_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
         try:
@@ -195,32 +207,6 @@ class NomogramApp:
 
     def pick_axis_point(self):
         self.nomogram_canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
-
-    def capture_bezier_coordinates(self, event):
-        axis_id = self.axis_id_variable.get()
-        if axis_id is not None:
-            x, y = event.x, event.y
-
-            self.control_points[axis_id].append((x, y))
-
-            point_size = 5
-            control_point_id = f"control{axis_id}_{len(self.control_points[axis_id]) - 1}"
-
-            self.nomogram_canvas.create_oval(
-                x - point_size, y - point_size, x + point_size, y + point_size,
-                fill="orange", outline="black", tags=(control_point_id, "control_point")
-            )
-
-            # Bind events only for the newly created control point
-            self.move_point(control_point_id, axis_id)
-        if axis_id in self.nomogram_axes:  # if there is already a Bézier curve
-            self.draw_bezier(axis_id)
-            self.update_points(axis_id)
-        try:
-            self.update_left_panel_content()
-        except Exception as e:
-            print("Error", f"{e}")
-        self.nomogram_canvas.unbind("<Button-1>")
 
     def move_point(self, point_id, axis_id):
         self.nomogram_canvas.tag_bind(point_id, "<Button-1>",
@@ -292,6 +278,32 @@ class NomogramApp:
             pass
         else:
             self.draw_bezier(axis_id)
+
+    def capture_bezier_coordinates(self, event):
+        axis_id = self.axis_id_variable.get()
+        if axis_id is not None:
+            x, y = event.x, event.y
+
+            self.control_points[axis_id].append((x, y))
+
+            point_size = 5
+            control_point_id = f"control{axis_id}_{len(self.control_points[axis_id]) - 1}"
+
+            self.nomogram_canvas.create_oval(
+                x - point_size, y - point_size, x + point_size, y + point_size,
+                fill="orange", outline="black", tags=(control_point_id, "control_point")
+            )
+
+            # Bind events only for the newly created control point
+            self.move_point(control_point_id, axis_id)
+        if axis_id in self.nomogram_axes:  # if there is already a Bézier curve
+            self.draw_bezier(axis_id)
+            self.update_points(axis_id)
+        try:
+            self.update_left_panel_content()
+        except Exception as e:
+            print("Error", f"{e}")
+        self.nomogram_canvas.unbind("<Button-1>")
 
     def capture_axis_point_coordinates(self, event):
         axis_id = self.axis_id_variable.get()

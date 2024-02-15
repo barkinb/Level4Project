@@ -8,3 +8,4 @@ PyMC==4.0.0
 opencv-python==4.8.1.78
 bezier==2023.7.28
 sympy ==1.12
+tkinter-tooltip ==3.0.0
