@@ -133,7 +133,7 @@ class Axis:
             self.draw_estimated_axis_points()
 
     def draw_estimated_axis_points(self):
-        random_points = self.scaled_points[::10]  # will show 5 values guessed by the program
+        random_points = self.scaled_points[::5]  # will show 5 values guessed by the program
         for i, (x, y) in enumerate(random_points):
             x_float, y_float = float(x), float(y)
             # Calculate the corresponding axis value using your fitting function
@@ -148,11 +148,13 @@ class Axis:
             self.canvas.create_text(text_x, text_y, anchor="nw",
                                     text=f"{axis_value}", fill="black",
                                     tags=f"axis_values_{self.name}")
-            print(self.find_axis_point(axis_value))
+
         self.axis_points_generated = True
 
     def add_distribution(self, distribution_str):
         try:
+            if self.distribution is not None:
+                self.canvas.delete(f"statistics_curve_{self.name}")
             self.distribution = parse_distribution(distribution_str)
 
             intervals = np.linspace(0, len(self.scaled_points) - 1, 50, dtype=int)
@@ -166,23 +168,31 @@ class Axis:
 
                 # Use fitting_function to find the axis_value
                 axis_value = fitting_function(self.axis_equation_coefficients, np.array([scaled_point]), self.diffs)
-
                 # Use self.distribution.pdf to find the probability density
                 probability_density = self.distribution.pdf(axis_value)
-
+                print(axis_value, probability_density)
                 scaled_values.append(probability_density)
-                x1 = scaled_point[0] - self.curve_width * probability_density / 2
-                y1 = scaled_point[1] - self.curve_width * probability_density / 2
-                x2 = scaled_point[0] + self.curve_width * probability_density / 2
-                y2 = scaled_point[1] + self.curve_width * probability_density / 2
+
+                probability_density_max = max(scaled_values)
+                canvas_width, canvas_height = self.canvas.winfo_width(), self.canvas.winfo_height()
+                max_oval_size = min(canvas_width, canvas_height) * 0.01
+                scaling_factor = max_oval_size / probability_density_max
+                oval_size = probability_density * scaling_factor
+
+                # Calculate coordinates for the oval
+                x1 = scaled_point[0] - oval_size / 2
+                y1 = scaled_point[1] - oval_size / 2
+                x2 = scaled_point[0] + oval_size / 2
+                y2 = scaled_point[1] + oval_size / 2
+
                 x1_scalar = x1[0]
                 y1_scalar = y1[0]
                 x2_scalar = x2[0]
                 y2_scalar = y2[0]
-
+                print(x1_scalar, y1_scalar, x2_scalar, y2_scalar)
                 # Create the oval on the canvas
                 self.canvas.create_oval(x1_scalar, y1_scalar, x2_scalar, y2_scalar, fill="green",
-                                        tags=f"statistics_curve_{self.name}")
+                                        width = self.curve_width,tags=f"statistics_curve_{self.name}")
 
 
         except Exception as e:
