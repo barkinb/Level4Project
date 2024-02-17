@@ -19,6 +19,7 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 class Axis:
     def __init__(self, name, control_points, canvas, width: int = DEFAULT_CURVE_WIDTH,
                  colour: str = DEFAULT_CURVE_COLOUR) -> None:
+        self.distribution_type = None
         self.statistics_curve = None
         self.scaled_points = None
         self.axis_equation_degree = None
@@ -155,30 +156,31 @@ class Axis:
         try:
             if self.distribution is not None:
                 self.canvas.delete(f"statistics_curve_{self.name}")
-            self.distribution = parse_distribution(distribution_str)
+            self.distribution, self.distribution_type = parse_distribution(distribution_str)
 
-            intervals = np.linspace(0, len(self.scaled_points) - 1, 50, dtype=int)
+            intervals = np.linspace(0, len(self.scaled_points) - 1, 50, dtype=int)  # 50 points to calculate the
+            # distribution
 
             scaled_values = []
-
+            max_oval_size = min(self.canvas.winfo_width(), self.canvas.winfo_height()) * 0.01
             # Iterate over each interval
+
             for i in intervals:
-                # get the scaled point
                 scaled_point = self.scaled_points[i]
 
                 # Use fitting_function to find the axis_value
                 axis_value = fitting_function(self.axis_equation_coefficients, np.array([scaled_point]), self.diffs)
-                # Use self.distribution.pdf to find the probability density
-                probability_density = self.distribution.pdf(axis_value)
-                print(axis_value, probability_density)
-                scaled_values.append(probability_density)
+                # Use self.distribution.pdf to find the probability density at that point
+                probability_at_point = self.distribution.pdf(axis_value)
 
-                probability_density_max = max(scaled_values)
-                canvas_width, canvas_height = self.canvas.winfo_width(), self.canvas.winfo_height()
-                max_oval_size = min(canvas_width, canvas_height) * 0.01
-                scaling_factor = max_oval_size / probability_density_max
-                oval_size = probability_density * scaling_factor
+                print(axis_value, probability_at_point)
+                scaled_values.append(probability_at_point)
 
+            probability_max = max(scaled_values)
+            scaling_factor = max_oval_size / probability_max
+            oval_size = probability_max * scaling_factor
+            for i in intervals:
+                scaled_point = self.scaled_points[i]
                 # Calculate coordinates for the oval
                 x1 = scaled_point[0] - oval_size / 2
                 y1 = scaled_point[1] - oval_size / 2
@@ -192,14 +194,13 @@ class Axis:
                 print(x1_scalar, y1_scalar, x2_scalar, y2_scalar)
                 # Create the oval on the canvas
                 self.canvas.create_oval(x1_scalar, y1_scalar, x2_scalar, y2_scalar, fill="green",
-                                        width = self.curve_width,tags=f"statistics_curve_{self.name}")
-
+                                        width=self.curve_width, tags=f"statistics_curve_{self.name}")
 
         except Exception as e:
             print(traceback.print_exc())
-            print(f"Error adding distribution: {e}")
+            messagebox.showwarning(f"Error adding distribution: {e}")
 
-    def show_distribution_info(self, event):
+    def show_distribution_info(self):
         try:
             if self.distribution:
                 messagebox.showinfo("Distribution Info", str(self.distribution))
