@@ -206,7 +206,6 @@ class Axis:
                 self.canvas.create_oval(x1, y1, x2, y2, fill="green",
                                         width=self.curve_width, tags=f"statistics_points_{self.name}")
 
-
         except Exception as e:
             print(traceback.print_exc())
             messagebox.showwarning(f"Error adding distribution: {e}")
