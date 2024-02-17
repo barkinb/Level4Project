@@ -2,47 +2,53 @@ import scipy.stats as stats
 import re
 
 def parse_distribution(distribution_str):
+
     try:
         match = re.match(r'(\w+)\((.*?)\)', distribution_str)
-        if match:
+        try:
             dist_type = match.group(1)
             params = [float(param) for param in match.group(2).split(',')]
-
+            distribution_name, distribution_type = None, None
             if dist_type == 'Normal':
-                distribution = stats.norm(*params)
+                distribution_name = stats.norm(*params)
+                distribution_type = "cont"
             elif dist_type == 'Uniform':
-                distribution = stats.uniform(*params)
+                distribution_name = stats.uniform(*params)
+                distribution_type = "cont"
             elif dist_type == 'Poisson':
-                distribution = stats.poisson(*params)
+                distribution_name = stats.poisson(*params)
+                distribution_type = "discrete"
             elif dist_type == 't':
-                distribution = stats.t(*params)
+                distribution_name = stats.t(*params)
+                distribution_type = "cont"
             elif dist_type == 'Exponential':
-                distribution = stats.expon(*params)
+                distribution_name = stats.expon(*params)
+                distribution_type = "cont"
             elif dist_type == 'Gamma':
-                distribution = stats.gamma(*params)
+                distribution_name = stats.gamma(*params)
+                distribution_type = "cont"
             elif dist_type == 'Beta':
-                distribution = stats.beta(*params)
+                distribution_name = stats.beta(*params)
+                distribution_type = "cont"
             elif dist_type == 'Binomial':
-                distribution = stats.binom(*params)
+                distribution_name = stats.binom(*params)
+                distribution_type = "discrete"
             elif dist_type == 'Geometric':
-                distribution = stats.geom(*params)
-            elif dist_type == 'Hypergeometric':
-                distribution = stats.hypergeom(*params)
+                distribution_name = stats.geom(*params)
+                distribution_type = "discrete"
             elif dist_type == 'Logistic':
-                distribution = stats.logistic(*params)
-            elif dist_type == 'Lognormal':
-                distribution = stats.lognorm(*params)
+                distribution_name = stats.logistic(*params)
+                distribution_type = "cont"
             elif dist_type == 'NegativeBinomial':
-                distribution = stats.nbinom(*params)
+                distribution_name = stats.nbinom(*params)
+                distribution_type = "discrete"
             elif dist_type == 'UniformDiscrete':
-                distribution = stats.randint(*params)
-            elif dist_type == 'Wald':
-                distribution = stats.wald(*params)
-            elif dist_type == 'Weibull':
-                distribution = stats.weibull_min(*params)
-            else:
-                raise ValueError('Distribution could not be parsed correctly')
-            print(distribution)
-            return distribution
+                distribution_name = stats.randint(*params)
+                distribution_type = "discrete"
+            print(distribution_name)
+            return distribution_name, distribution_type
+        except Exception as e:
+            print(f"Error parsing distribution_name: {e}")
+
     except Exception as e:
-        print(f"Error parsing distribution: {e}")
+        print(f"Error parsing distribution_name: {e}")
