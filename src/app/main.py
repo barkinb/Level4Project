@@ -267,10 +267,9 @@ class NomogramApp:
             curve.control_points = self.control_points[bezier_axis_id]  # Update the control points
         else:
             # Create a new BezierCurve object
-            curve = Axis(bezier_axis_id, self.control_points[bezier_axis_id], self.nomogram_canvas)
-            self.nomogram_axes[bezier_axis_id] = curve
+            self.nomogram_axes[bezier_axis_id] = Axis(bezier_axis_id, self.control_points[bezier_axis_id], self.nomogram_canvas)
 
-        curve.draw(self.nomogram_canvas)
+        self.nomogram_axes[bezier_axis_id].draw()
 
     def update_bezier(self, axis_id):
         if axis_id not in self.control_points or axis_id not in self.nomogram_axes:
@@ -290,7 +289,7 @@ class NomogramApp:
 
             self.nomogram_canvas.create_oval(
                 x - point_size, y - point_size, x + point_size, y + point_size,
-                fill="orange", outline="black", tags=(control_point_id, "control_point")
+                fill="orange", outline="black", tags=(control_point_id, "control_point", f"control_points_{axis_id}")
             )
 
             # Bind events only for the newly created control point
@@ -323,7 +322,7 @@ class NomogramApp:
 
                 self.nomogram_canvas.create_oval(
                     x - point_size, y - point_size, x + point_size, y + point_size,
-                    fill="yellow", outline="black", tags=(axis_point_id, "axis_point")
+                    fill="yellow", outline="black", tags=(axis_point_id, "axis_point", f"axis_points_{axis_id}")
                 )
                 self.move_point(axis_point_id, axis_id)
                 self.update_points(axis_id)
