@@ -1,6 +1,5 @@
 import traceback
-from tkinter import Canvas, messagebox
-
+from tkinter import messagebox
 import numpy as np
 import sympy
 from bezier import bezier
@@ -12,6 +11,7 @@ from DistributionParser import parse_distribution
 NUMBER_OF_DETAIL = 50
 DEFAULT_CURVE_WIDTH = 2
 DEFAULT_CURVE_COLOUR = "blue"
+DEFAULT_POINT_SIZE = 1000
 
 InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 
@@ -19,6 +19,9 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 class Axis:
     def __init__(self, name, control_points, canvas, width: int = DEFAULT_CURVE_WIDTH,
                  colour: str = DEFAULT_CURVE_COLOUR) -> None:
+
+        self.distribution_function = None
+        self.distribution_params = None
         self.distribution_type = None
         self.statistics_curve = None
         self.scaled_points = None
@@ -48,9 +51,9 @@ class Axis:
         self.canvas = canvas
         self.curve = None
 
-    def draw(self, canvas: Canvas) -> None:
+    def draw(self) -> None:
         if self.curve is not None:
-            canvas.delete(self.curve)
+            self.canvas.delete(self.curve)
 
         x_coordinates, y_coordinates = zip(*self.control_points)
         fortran_array = np.asfortranarray([x_coordinates, y_coordinates])
@@ -61,7 +64,8 @@ class Axis:
         self.scaled_points = [(points[0][i], points[1][i]) for i in range(len(points[0]))]
 
         self.implicit_axis_equation = self.curve_points.implicitize()
-        self.curve = canvas.create_line(*sum(self.scaled_points, ()), width=self.curve_width, fill=self.curve_colour)
+        self.curve = self.canvas.create_line(*sum(self.scaled_points, ()), width=self.curve_width,
+                                             fill=self.curve_colour, tags=f"bezier_axis_curve_{self.name}")
 
     def add_axis_points(self, point):
         self.axis_points.append(point)
@@ -147,45 +151,49 @@ class Axis:
             self.canvas.create_oval(x_float - 2.5, y_float - 2.5, x_float + 2.5, y_float + 2.5, fill="green",
                                     outline="orange", tags=f"axis_values_{self.name}")
             self.canvas.create_text(text_x, text_y, anchor="nw",
-                                    text=f"{axis_value}", fill="black",
+                                    text=f"Estimate {axis_value:.3f}", fill="black",
                                     tags=f"axis_values_{self.name}")
 
         self.axis_points_generated = True
 
     def add_distribution(self, distribution_str):
+        probability_at_point = None
         try:
+            self.canvas.delete(f"bezier_axis_curve_{self.name}")
+            self.canvas.delete(f"axis_points_{self.name}")
+            self.canvas.delete(f"control_points_{self.name}")
+            self.canvas.delete(f"axis_values_{self.name}")
             if self.distribution is not None:
-                self.canvas.delete(f"statistics_curve_{self.name}")
-            self.distribution, self.distribution_type = parse_distribution(distribution_str)
-
-            intervals = np.linspace(0, len(self.scaled_points) - 1, 50, dtype=int)  # 50 points to calculate the
+                self.canvas.delete(f"statistics_points_{self.name}")
+            self.distribution = parse_distribution(distribution_str)
+            self.distribution_type = self.distribution["type"]
+            self.distribution_params = self.distribution["params"]
+            self.distribution_function = self.distribution["function"]
+            intervals = np.linspace(0, len(self.scaled_points) - 1, NUMBER_OF_DETAIL,
+                                    dtype=int)  # 50 points to calculate the
             # distribution
 
-            scaled_values = []
-            max_oval_size = min(self.canvas.winfo_width(), self.canvas.winfo_height()) * 0.01
             # Iterate over each interval
 
             for i in intervals:
+
                 scaled_point = self.scaled_points[i]
 
                 # Use fitting_function to find the axis_value
                 axis_value = fitting_function(self.axis_equation_coefficients, np.array([scaled_point]), self.diffs)
                 # Use self.distribution.pdf to find the probability density at that point
-                probability_at_point = self.distribution.pdf(axis_value)
+                if self.distribution_type == "continuous":
+                    probability_at_point = self.distribution_function.pdf(axis_value, *self.distribution_params)
+                    print(axis_value, probability_at_point)
+                elif self.distribution_type == "discrete":
+                    probability_at_point = self.distribution_function.pmf(axis_value, *self.distribution_params)
+                    print(axis_value, probability_at_point)
 
-                print(axis_value, probability_at_point)
-                scaled_values.append(probability_at_point)
-
-            probability_max = max(scaled_values)
-            scaling_factor = max_oval_size / probability_max
-            oval_size = probability_max * scaling_factor
-            for i in intervals:
-                scaled_point = self.scaled_points[i]
                 # Calculate coordinates for the oval
-                x1 = scaled_point[0] - oval_size / 2
-                y1 = scaled_point[1] - oval_size / 2
-                x2 = scaled_point[0] + oval_size / 2
-                y2 = scaled_point[1] + oval_size / 2
+                x1 = scaled_point[0] - probability_at_point * DEFAULT_POINT_SIZE / 2
+                y1 = scaled_point[1] - probability_at_point * DEFAULT_POINT_SIZE / 2
+                x2 = scaled_point[0] + probability_at_point * DEFAULT_POINT_SIZE / 2
+                y2 = scaled_point[1] + probability_at_point * DEFAULT_POINT_SIZE / 2
 
                 x1_scalar = x1[0]
                 y1_scalar = y1[0]
@@ -194,8 +202,7 @@ class Axis:
                 print(x1_scalar, y1_scalar, x2_scalar, y2_scalar)
                 # Create the oval on the canvas
                 self.canvas.create_oval(x1_scalar, y1_scalar, x2_scalar, y2_scalar, fill="green",
-                                        width=self.curve_width, tags=f"statistics_curve_{self.name}")
-
+                                        width=self.curve_width, tags=f"statistics_points_{self.name}")
         except Exception as e:
             print(traceback.print_exc())
             messagebox.showwarning(f"Error adding distribution: {e}")
