@@ -11,7 +11,7 @@ from DistributionParser import parse_distribution
 NUMBER_OF_DETAIL = 50
 DEFAULT_CURVE_WIDTH = 2
 DEFAULT_CURVE_COLOUR = "blue"
-DEFAULT_POINT_SIZE = 1000
+DEFAULT_POINT_SIZE = 20
 
 InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 
@@ -157,7 +157,7 @@ class Axis:
         self.axis_points_generated = True
 
     def add_distribution(self, distribution_str):
-        probability_at_point = None
+
         try:
             self.canvas.delete(f"bezier_axis_curve_{self.name}")
             self.canvas.delete(f"axis_points_{self.name}")
@@ -169,40 +169,44 @@ class Axis:
             self.distribution_type = self.distribution["type"]
             self.distribution_params = self.distribution["params"]
             self.distribution_function = self.distribution["function"]
-            intervals = np.linspace(0, len(self.scaled_points) - 1, NUMBER_OF_DETAIL,
-                                    dtype=int)  # 50 points to calculate the
+
             # distribution
 
-            # Iterate over each interval
+            # Initialize probability_at_point as a NumPy array
+            probability_at_point = np.zeros(len(self.scaled_points))
 
-            for i in intervals:
-
+            for i in range(len(self.scaled_points)):
                 scaled_point = self.scaled_points[i]
 
                 # Use fitting_function to find the axis_value
                 axis_value = fitting_function(self.axis_equation_coefficients, np.array([scaled_point]), self.diffs)
+
                 # Use self.distribution.pdf to find the probability density at that point
                 if self.distribution_type == "continuous":
-                    probability_at_point = self.distribution_function.pdf(axis_value, *self.distribution_params)
-                    print(axis_value, probability_at_point)
+                    probability_at_point[i] = self.distribution_function.pdf(axis_value, *self.distribution_params)
                 elif self.distribution_type == "discrete":
-                    probability_at_point = self.distribution_function.pmf(axis_value, *self.distribution_params)
-                    print(axis_value, probability_at_point)
+                    probability_at_point[i] = self.distribution_function.pmf(axis_value, *self.distribution_params)
 
-                # Calculate coordinates for the oval
-                x1 = scaled_point[0] - probability_at_point * DEFAULT_POINT_SIZE / 2
-                y1 = scaled_point[1] - probability_at_point * DEFAULT_POINT_SIZE / 2
-                x2 = scaled_point[0] + probability_at_point * DEFAULT_POINT_SIZE / 2
-                y2 = scaled_point[1] + probability_at_point * DEFAULT_POINT_SIZE / 2
+            # Find the maximum probability
+            max_probability = np.max(probability_at_point)
 
-                x1_scalar = x1[0]
-                y1_scalar = y1[0]
-                x2_scalar = x2[0]
-                y2_scalar = y2[0]
-                print(x1_scalar, y1_scalar, x2_scalar, y2_scalar)
+            # Calculate scale_factor using NumPy element-wise operations
+            scale_factor = DEFAULT_POINT_SIZE / max_probability
+
+            for i in range(len(self.scaled_points)):
+                scaled_point = self.scaled_points[i]
+
+                # Calculate coordinates for the oval using NumPy element-wise operations
+                x1 = scaled_point[0] - probability_at_point[i] * scale_factor / 2
+                y1 = scaled_point[1] - probability_at_point[i] * scale_factor / 2
+                x2 = scaled_point[0] + probability_at_point[i] * scale_factor / 2
+                y2 = scaled_point[1] + probability_at_point[i] * scale_factor / 2
+
                 # Create the oval on the canvas
-                self.canvas.create_oval(x1_scalar, y1_scalar, x2_scalar, y2_scalar, fill="green",
+                self.canvas.create_oval(x1, y1, x2, y2, fill="green",
                                         width=self.curve_width, tags=f"statistics_points_{self.name}")
+
+
         except Exception as e:
             print(traceback.print_exc())
             messagebox.showwarning(f"Error adding distribution: {e}")
@@ -214,7 +218,7 @@ class Axis:
             else:
                 messagebox.showwarning("No Distribution", "No distribution found for this axis")
         except Exception as e:
-            print(f"Error showing distribution info: {e}")
+            messagebox.showwarning(f"Error adding distribution: {e}")
 
     def get_distribution(self):
         return self.distribution
