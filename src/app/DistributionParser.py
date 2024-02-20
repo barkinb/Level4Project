@@ -1,11 +1,12 @@
 import scipy.stats as stats
 import re
+from tkinter import messagebox
 
 def parse_distribution(distribution_str):
     try:
         match = re.match(r'(\w+)\((.*?)\)', distribution_str)
 
-        dist_type = match.group(1)
+        dist_type = match.group(1).title()
         params = [float(param) for param in match.group(2).split(',')]
         distribution_functions = {
             'Normal': {'function': stats.norm, 'type': 'continuous', 'params': params},
@@ -25,5 +26,5 @@ def parse_distribution(distribution_str):
         return distribution_functions[dist_type]
 
     except Exception as e:
-        print(f"Error parsing distribution_name: {e}")
+        messagebox.showerror(f"Error parsing distribution_name: {e}")
 
