@@ -26,5 +26,5 @@ def parse_distribution(distribution_str):
         return distribution_functions[dist_type]
 
     except Exception as e:
-        messagebox.showerror(f"Error parsing distribution_name: {e}")
+        messagebox.showerror("Error",f"Error parsing distribution_name: {e}")
 

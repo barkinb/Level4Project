@@ -34,7 +34,7 @@ class NomogramApp:
         self.nomogram_axes = {}
         self.isopleths = {}
         self.create_toolbar()
-        self.create_left_panel()
+        #self.create_left_panel()
         self.distributions = 0
         self.number_isopleths = 0
         #
@@ -104,7 +104,7 @@ class NomogramApp:
 
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
-            messagebox.showerror("Error",f"{e}")
+            messagebox.showerror("Error", f"{e}")
 
     def create_left_panel(self):
         self.left_panel_frame = tk.Frame(self.root, bd=1, relief=tk.RAISED)
@@ -153,7 +153,7 @@ class NomogramApp:
         #             distribution_label.pack()
         #
         # self.left_panel_canvas.update_idletasks()
-        # self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
+        # self.left_panel_canvas.configure(scroll region=self.left_panel_canvas.bbox("all"))
         # self.left_panel_content.pack()
 
     def on_frame_configure(self):
@@ -166,7 +166,7 @@ class NomogramApp:
 
         self.axis_id_dropdown['menu'].add_command(label="Add a new axis", command=self.add_new_axis_id)
 
-    def set_axis_id(self, axis_id):
+    def set_axis_id(self, axis_id: str):
         self.axis_id_variable.set(axis_id)
 
     def add_new_axis_id(self):
@@ -202,7 +202,7 @@ class NomogramApp:
         except Exception as e:
             messagebox.showerror("Error", f"{e}")
 
-    def display_image(self, image):
+    def display_image(self, image: Image.Image):
         if self.canvas:
             self.canvas = None
             self.original_img = None
@@ -219,7 +219,7 @@ class NomogramApp:
     def pick_axis_point(self):
         self.canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
 
-    def move_point(self, point_id, axis_id):
+    def move_point(self, point_id: str, axis_id: str):
         self.canvas.tag_bind(point_id, "<Button-1>",
                              lambda event: self.start_drag_point(event, axis_id))
         self.canvas.tag_bind(point_id, "<B1-Motion>",
@@ -227,14 +227,14 @@ class NomogramApp:
         self.canvas.tag_bind(point_id, "<ButtonRelease-1>",
                              lambda event: self.stop_drag_point(axis_id, point_id))
 
-    def start_drag_point(self, event, point_id):
+    def start_drag_point(self, event, point_id: str):
         # Record the starting position of the control point
         # adapted from https://stackoverflow.com/questions/29789554/tkinter-draw-rectangle-using-a-mouse
         self.start_x = self.canvas.canvasx(event.x)
         self.start_y = self.canvas.canvasy(event.y)
         self.current_point_id = point_id
 
-    def drag_point(self, event, axis_id, point_id):
+    def drag_point(self, event, axis_id: str, point_id: str):
         # Move the control point based on the mouse movement
         cur_x = self.canvas.canvasx(event.x)
         cur_y = self.canvas.canvasy(event.y)
@@ -255,7 +255,7 @@ class NomogramApp:
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (cur_x, cur_y, self.axis_points[axis_id][point_index][-1])
 
-    def stop_drag_point(self, axis_id, point_id):
+    def stop_drag_point(self, axis_id: str, point_id: str):
         # Update the control point's position in the data structure
         x, y = self.canvas.coords(point_id)[0], self.canvas.coords(point_id)[1]
 
@@ -271,10 +271,10 @@ class NomogramApp:
         self.update_left_panel_content()
 
     def draw_bezier(self, bezier_axis_id=None):
-        if bezier_axis_id is None :
+        if bezier_axis_id is None:
             bezier_axis_id = self.axis_id_variable.get()
         if bezier_axis_id == "Select axis:":
-            messagebox.showinfo("Error","Please select an axis")
+            messagebox.showinfo("Error", "Please select an axis")
         # Check if a BezierCurve object already exists for the axis
         if bezier_axis_id in self.nomogram_axes:
             curve = self.nomogram_axes[bezier_axis_id]
@@ -286,7 +286,7 @@ class NomogramApp:
 
         self.nomogram_axes[bezier_axis_id].draw()
 
-    def update_bezier(self, axis_id):
+    def update_bezier(self, axis_id: str):
         if axis_id not in self.control_points or axis_id not in self.nomogram_axes:
             pass
         else:
@@ -295,7 +295,7 @@ class NomogramApp:
     def capture_bezier_coordinates(self, event):
         axis_id = self.axis_id_variable.get()
         if axis_id == "Select axis:":
-            messagebox.showerror("Error","Please select an axis name")
+            messagebox.showerror("Error", "Please select an axis name")
         try:
             if axis_id is not None and axis_id != "Select axis:":
                 x, y = event.x, event.y
@@ -360,8 +360,8 @@ class NomogramApp:
         if axis_id and distribution_text:
             try:
                 self.nomogram_axes[axis_id].add_distribution(distribution_text)
-            except Exception as e:
-                messagebox.showerror("Error","Error : No Axis with this identifier exists")
+            except ValueError:
+                messagebox.showerror("Error", "Error : No Axis with this identifier exists")
 
         self.distributions += 1
         self.update_left_panel_content()
@@ -372,7 +372,7 @@ class NomogramApp:
     def save_project(self):
         pass
 
-    def update_points(self, axis_id):
+    def update_points(self, axis_id: str):
         if axis_id in self.nomogram_axes:
             if axis_id in self.axis_points:
                 self.nomogram_axes[axis_id].set_axis_points(self.axis_points[axis_id])
@@ -382,43 +382,25 @@ class NomogramApp:
     def create_isopleth(self):
 
         isopleth_id = self.number_isopleths
-        # if self.distributions >1:
-        control_points = []
-        if len(self.control_points) ==0:
-            messagebox.showerror("Error","No Axis Exist")
+
+        if len(self.control_points) == 0:
+            messagebox.showerror("Error", "No Axis Exist")
             return False
         for i in self.nomogram_axes.keys():
             if self.nomogram_axes[i].axis_equation_produced:
                 self.number_of_complete_axis += 1
-        if self.number_of_complete_axis < 2:
-            messagebox.showerror("Error","At least two axis must be created")
+        if self.number_of_complete_axis < 3:
+            messagebox.showerror("Error", "At least three axis must be created")
             return False
         try:
-            for i in self.nomogram_axes.keys():
-                if len(control_points) == 2:
-                    self.isopleths[isopleth_id] = Isopleth(isopleth_id, control_points[0:2], self.canvas)
-                    self.isopleths[isopleth_id].draw()
+            self.isopleths[isopleth_id] = Isopleth(isopleth_id, self.canvas, self.nomogram_axes)
 
-                    self.number_isopleths += 1
-                if self.nomogram_axes[i].axis_equation_generated():
-                    if self.nomogram_axes[i].get_distribution() is not None:
-                        random_point = self.nomogram_axes[i].get_random_point()
-                        control_points.append(random_point)
-                    else:
-                        random_point = self.nomogram_axes[i].get_random_point()
-                        control_points.append(random_point)
-                self.canvas.delete(f"axis_points_{i}")
-                self.canvas.delete(f"control_points_{i}")
-                self.canvas.delete(f"axis_values_{i}")
-            if len(control_points) == 2:
-                self.isopleths[isopleth_id] = Isopleth(isopleth_id, control_points[0:2], self.canvas)
-                self.isopleths[isopleth_id].draw()
+            self.number_isopleths += 1
 
-                self.number_isopleths += 1
         except Exception as e:
 
             print(traceback.print_exc())
-            messagebox.showerror("Error",f"Error {e}")
+            messagebox.showerror("Error", f"Error {e}")
 
 
 if __name__ == "__main__":

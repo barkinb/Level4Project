@@ -1,3 +1,4 @@
+import tkinter
 import traceback
 from random import randint
 from tkinter import messagebox
@@ -9,7 +10,7 @@ from scipy.optimize import least_squares, fsolve
 from src.app.utils.maths_functions import objective_function, fitting_function
 from DistributionParser import parse_distribution
 
-NUMBER_OF_DETAIL = 50
+NUMBER_OF_DETAIL = 500  # multiple of 5
 DEFAULT_CURVE_WIDTH = 2
 DEFAULT_CURVE_COLOUR = "blue"
 DEFAULT_POINT_SIZE = 20
@@ -18,7 +19,8 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 
 
 class Axis:
-    def __init__(self, name, control_points, canvas, width: int = DEFAULT_CURVE_WIDTH,
+
+    def __init__(self, name: str, control_points: [], canvas: tkinter.Canvas, width: int = DEFAULT_CURVE_WIDTH,
                  colour: str = DEFAULT_CURVE_COLOUR) -> None:
 
         self.probability_at_point = None
@@ -65,11 +67,11 @@ class Axis:
             fortran_array = np.asfortranarray([x_coordinates, y_coordinates])
             self.curve_points = bezier.Curve.from_nodes(fortran_array)
             parameters = np.linspace(0, 1, NUMBER_OF_DETAIL)
-
             points = self.curve_points.evaluate_multi(parameters)
             self.scaled_points = [(points[0][i], points[1][i]) for i in range(len(points[0]))]
             self.scaled_points_array = np.array(self.scaled_points, dtype='float64')
             self.scaled_points_middle = np.mean(self.scaled_points_array, axis=0)
+            self.scaled_points_middle = (self.scaled_points_middle[0], self.scaled_points_middle[1])
             self.implicit_axis_equation = self.curve_points.implicitize()
             self.curve = self.canvas.create_line(*sum(self.scaled_points, ()), width=self.curve_width,
                                                  fill=self.curve_colour, tags=f"bezier_axis_curve_{self.name}")
@@ -78,15 +80,16 @@ class Axis:
         else:
             messagebox.showerror(title="Error", message="Please enter at least two control points to draw an overlay")
             return False
+
     def add_axis_points(self, point):
         self.axis_points.append(point)
 
-    def set_axis_points(self, axis_points):
+    def set_axis_points(self, axis_points: []):
         self.axis_points = axis_points
         if len(self.axis_points) > 2:
             self.fit_axis_equation()
 
-    def set_control_points(self, control_points):
+    def set_control_points(self, control_points: []):
         self.control_points = control_points
 
     def get_implicit_equation(self):
@@ -114,19 +117,22 @@ class Axis:
     def scaled_points_midpoint(self):
         return self.scaled_points_middle
 
-    def find_axis_point(self, axis_value):
+    def find_axis_point(self, axis_value: float):
+        global solution
         try:
+
             def equations(variables):
                 x, y = variables
                 # Evaluate the curve value and implicit value
-                curve_value = fitting_function(self.axis_equation_coefficients, np.array([x, y], dtype='float64'),
-                                               self.diffs) - axis_value
+                curve_value = fitting_function(self.axis_equation_coefficients, np.array([x, y]),
+                                               self.diffs)
                 implicit_value = self.calculate_implicit_equation()(x, y)
-                result = np.array([curve_value, implicit_value - axis_value], dtype='float64')
-                return result
+                return np.array([curve_value - axis_value, implicit_value],dtype='float64')
 
-            initial_guess = self.scaled_points_midpoint()
+            initial_guess = np.array([0, 0],dtype='float64')
             solution = fsolve(equations, initial_guess)
+
+
         except TypeError:
             print(traceback.print_last())
         return solution[0], solution[1]
@@ -135,8 +141,10 @@ class Axis:
 
         if self.axis_equation_produced:
             self.estimated_show_axis_points()
+
     def axis_equation_generated(self):
         return self.axis_equation_produced
+
     def estimated_show_axis_points(self) -> None:
 
         if self.axis_points_generated:
@@ -145,12 +153,11 @@ class Axis:
             self.draw_estimated_axis_points()
 
     def draw_estimated_axis_points(self):
-        random_points = self.scaled_points[::5]  # will show 5 values guessed by the program
+        random_points = self.scaled_points[::(NUMBER_OF_DETAIL // 5)]  # will show 5 values guessed by the program
         for i, (x, y) in enumerate(random_points):
             x_float, y_float = float(x), float(y)
             # Calculate the corresponding axis value using your fitting function
-            axis_value = fitting_function(self.axis_equation_coefficients, np.array([x, y], dtype='float64'),
-                                          self.diffs)
+            axis_value = self.find_value_at_point([x_float, y_float])
 
             # Display the axis value next to the point
             text_x = x_float + 5
@@ -164,17 +171,23 @@ class Axis:
 
         self.axis_points_generated = True
 
-    def add_distribution(self, distribution_str):
+    def find_value_at_point(self, point: []):
+        return fitting_function(self.axis_equation_coefficients,
+                                np.array(point), self.diffs)
+
+    def add_distribution(self, distribution_str: str):
         if not self.axis_points_generated:
             messagebox.showinfo(title="Axis points not generated",
                                 message="Please ensure axis points have been captured")
-
+        if distribution_str == "None":
+            self.distribution = None
+            self.distribution_type = None
+            self.distribution_params = None
+            self.distribution_function = None
+            self.canvas.delete(f"statistics_points_{self.name}")
         if self.axis_points_generated:
             try:
 
-                self.canvas.delete(f"axis_points_{self.name}")
-                self.canvas.delete(f"control_points_{self.name}")
-                self.canvas.delete(f"axis_values_{self.name}")
                 if self.distribution is not None:
                     self.canvas.delete(f"statistics_points_{self.name}")
                 self.distribution = parse_distribution(distribution_str)
@@ -188,11 +201,11 @@ class Axis:
                     scaled_point = self.scaled_points[i]
 
                     # Use fitting_function to find the axis_value
-                    axis_value = fitting_function(self.axis_equation_coefficients,
-                                                  np.array([scaled_point], dtype='float64'), self.diffs)
+
+                    axis_value = self.find_value_at_point(scaled_point)
 
                     # Use self.distribution.pdf to find the probability density at that point
-                    self.probability_at_point[i] = self.probability_d_m(axis_value)
+                    self.probability_at_point[i] = self.get_probability_at_point(axis_value)
 
                 # Find the maximum probability
                 max_probability = np.max(self.probability_at_point)
@@ -213,25 +226,19 @@ class Axis:
                     self.canvas.create_oval(x1, y1, x2, y2, fill=self.curve_colour, outline=self.curve_colour,
                                             width=self.curve_width, tags=f"statistics_points_{self.name}")
 
-
             except Exception as e:
                 print(traceback.print_exc())
-                messagebox.showwarning(f"Error adding distribution: {e}")
+                messagebox.showerror("Error", f"Error adding distribution: {e}")
+            if self.distribution is not None:
+                self.canvas.delete(f"axis_points_{self.name}")
+                self.canvas.delete(f"control_points_{self.name}")
+                self.canvas.delete(f"axis_values_{self.name}")
 
-    def probability_d_m(self, value):
+    def get_probability_at_point(self, value: float) -> float:
         if self.distribution_type == "continuous":
             return self.distribution_function.pdf(value, *self.distribution_params)
         elif self.distribution_type == "discrete":
             return self.distribution_function.pmf(int(value), *self.distribution_params)
-
-    def show_distribution_info(self):
-        try:
-            if self.distribution:
-                messagebox.showinfo("Distribution Info", str(self.distribution))
-            else:
-                messagebox.showwarning("No Distribution", "No distribution found for this axis")
-        except Exception as e:
-            messagebox.showwarning(f"Error adding distribution: {e}")
 
     def get_distribution(self):
         return self.distribution
