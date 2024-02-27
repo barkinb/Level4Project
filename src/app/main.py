@@ -50,6 +50,7 @@ class NomogramApp:
         root_window.bind('<Control-b>', lambda event: self.draw_bezier())
         root_window.bind('<Control-a>', lambda event: self.pick_axis_point())
         root_window.bind('<Control-i>', lambda event: self.create_isopleth())
+        root_window.bind('<Control-BackSpace>', lambda event: self.delete_button(event))
 
     def create_toolbar(self):
         # Create a frame to hold the toolbar buttons
@@ -427,6 +428,31 @@ class NomogramApp:
 
             print(traceback.print_exc())
             messagebox.showerror("Error", f"Error {e}")
+
+    def delete_button(self, event):
+        print("delete pressed")
+        selected_axis = self.axis_id_variable.get()
+        if selected_axis == "Select axis:":
+            return
+
+        event_x, event_y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
+        print(event_x, event_y)
+        print(self.canvas.find_all())
+        point_id = self.canvas.find_closest(event_x, event_y)
+        print(point_id)
+        if point_id in self.canvas.find_withtag(f"control_points_{selected_axis}"):
+            control_point_index = int(point_id.split('_')[-1])
+            self.control_points[selected_axis].pop(control_point_index)
+            self.canvas.delete(point_id)
+            self.update_bezier(selected_axis)
+            self.update_points(selected_axis)
+            self.update_left_panel_content()
+        elif point_id in self.canvas.find_withtag(f"axis_points_{selected_axis}"):
+            axis_point_index = int(point_id.split('_')[-1])
+            self.axis_points[selected_axis].pop(axis_point_index)
+            self.canvas.delete(point_id)
+            self.update_points(selected_axis)
+            self.update_left_panel_content()
 
 
 if __name__ == "__main__":
