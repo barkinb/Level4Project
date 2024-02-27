@@ -3,7 +3,7 @@ import tkinter
 import numpy as np
 import sympy
 from bezier import bezier
-from scipy.optimize import least_squares, fsolve
+from scipy.optimize import fsolve
 
 NUMBER_OF_DETAIL = 1000
 DEFAULT_LINE_WIDTH = 2
@@ -83,22 +83,24 @@ class Isopleth:
         self.intersections = self.find_isopleth_intersections()
         for i in self.intersections:
             axis_id, x, y = i[0], i[1][0], i[1][1]
-            mean = self.nomogram_axes[axis_id].get_mean_at_point([x, y])
-            std_deviation = self.nomogram_axes[axis_id].get_standard_deviation_at_point([x, y])
-            if mean is not None and std_deviation is not None:
+            axis_value = self.nomogram_axes[axis_id].find_value_at_point([x, y])
+            if self.nomogram_axes[axis_id].get_distribution() is not None:
+                probability_density = self.nomogram_axes[axis_id].get_probability_at_point(axis_value)
+                # Display axis value and probability density near the intersection point with tags
                 self.canvas.create_text(x + 50, y + 50, anchor="nw", fill="black",
-                                        text=f"µ: {mean:.3f}, σ: {std_deviation:.3f}",
-                                        tags=f"probability_values_{axis_id}")
-            elif mean is not None:
+                                        text=f"Axis Value: {axis_value:.3f}, "
+                                             f"Probability Density: {probability_density:.3f}",
+                                        tags=f"axis_values_{axis_id}")
+            else:
                 self.canvas.create_text(x + 50, y + 50, anchor="nw", fill="black",
-                                        text=f"µ: {mean:.3f}",
-                                        tags=f"probability_values_{axis_id}")
+                                        text=f"Axis Value: {axis_value:.3f}",
+                                        tags=f"axis_values_{axis_id}")
 
     def get_implicit_equation(self):
         # returns implicit equation
         return self.implicit_axis_equation
 
-    def calculate_implicit_equation(self) :
+    def calculate_implicit_equation(self):
         return lambda x, y: self.implicit_axis_equation.subs([(self.x, x), (self.y, y)])
 
     def find_isopleth_intersections(self):
@@ -108,11 +110,11 @@ class Isopleth:
             if axis.axis_equation_generated():
 
                 def equations(variables):
-                    x, y = variables[0],variables[1]
+                    x, y = variables[0], variables[1]
                     # Evaluate the curve value and implicit value
                     curve_implicit = axis.calculate_implicit_equation()(x, y)
                     implicit_value = self.calculate_implicit_equation()(x, y)
-                    return np.array([curve_implicit - implicit_value, implicit_value],dtype="float64")
+                    return np.array([curve_implicit - implicit_value, implicit_value], dtype="float64")
 
                 initial_guess = np.array([axis.get_random_point()[0], axis.get_random_point()[1]])
                 solution = fsolve(equations, initial_guess)

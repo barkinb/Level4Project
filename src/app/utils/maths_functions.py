@@ -1,20 +1,6 @@
 import numpy as np
-import math
 
-
-def ni(n, i):
-    return math.factorial(n) / (math.factorial(i) * math.factorial(n - i))
-
-
-def basis(n, i, t):
-    j = np.array(ni(n, i) * (t ** i) * (1 - t) ** (n - i))
-    return j
-
-
-def calculate_angle(point1, point2):
-    x, y = point1[0] - point2[0], point1[1] - point2[1]
-    return math.atan2(y, x)
-
+from scipy.spatial.distance import cdist
 
 def fitting_function(coefficients, xy, diffs):
     x, y = xy.T
@@ -31,6 +17,19 @@ def fitting_function(coefficients, xy, diffs):
     return (a0 * x ** 3 + a1 * x ** 2 * y + a2 * x * y ** 2 + a3 * y ** 3 +
             a4 * x ** 2 + a5 * x * y + a6 * y ** 2 + a7)
 
+
 def objective_function(coefficients, xy_values, axis_values, diffs):
     errors = axis_values - fitting_function(coefficients, xy_values, diffs)
     return errors
+
+
+def calculate_opencv_closest_point(nodes, x, y):
+    starting_point = x, y
+    c_distances = cdist(np.asarray([x, y]).reshape(1, -1), nodes)
+    if c_distances.min() > 50:
+        return starting_point
+    else:
+
+        minimum_distance = c_distances.argmin()
+        closest_point = nodes[minimum_distance]
+        return closest_point

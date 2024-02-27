@@ -3,13 +3,20 @@ from tkinter import filedialog, messagebox, simpledialog
 from tktooltip import ToolTip
 from PIL import Image, ImageTk
 import traceback
+import cv2
 from NomogramAxis import Axis
+from src.app.utils.maths_functions import calculate_opencv_closest_point
 from src.app.Isopleth import Isopleth
+
+DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT = 1152, 720
+DEFAULT_CANVAS_IMAGE_OFFSET = 25
 
 
 class NomogramApp:
     def __init__(self, root_window):
 
+        self.opencv_image_points = None
+        self.opencv_image = None
         self.number_of_complete_axis = 0
         self.axis_id_variable = None
         self.axis_label = None
@@ -34,7 +41,7 @@ class NomogramApp:
         self.nomogram_axes = {}
         self.isopleths = {}
         self.create_toolbar()
-        #self.create_left_panel()
+        # self.create_left_panel()
         self.distributions = 0
         self.number_isopleths = 0
         #
@@ -185,7 +192,7 @@ class NomogramApp:
         try:
             if file_path:
                 self.original_img = Image.open(file_path)
-                canvas_width, canvas_height = 1152, 720
+                canvas_width, canvas_height = DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT
                 img_width, img_height = self.original_img.size
                 aspect_ratio = img_width / img_height
                 if img_width > canvas_width or img_height > canvas_height:
@@ -196,8 +203,7 @@ class NomogramApp:
                         new_width = canvas_width
                         new_height = int(canvas_width / aspect_ratio)
                     self.original_img = self.original_img.resize((new_width, new_height), Image.LANCZOS)
-
-                self.display_image(self.original_img)
+                    self.image_to_opencv(file_path, (new_width, new_height))
 
         except Exception as e:
             messagebox.showerror("Error", f"{e}")
@@ -206,12 +212,32 @@ class NomogramApp:
         if self.canvas:
             self.canvas = None
             self.original_img = None
-        self.canvas = tk.Canvas(self.root, width=image.width + 50, height=image.height + 50,
+
+        self.canvas = tk.Canvas(self.root, width=image.width + 2 * DEFAULT_CANVAS_IMAGE_OFFSET,
+                                height=image.height + 2 * DEFAULT_CANVAS_IMAGE_OFFSET,
                                 background="white")
         self.canvas.pack()
         photo = ImageTk.PhotoImage(image=image)
-        self.canvas.create_image(25, 25, anchor=tk.NW, image=photo)
+        self.canvas.create_image(DEFAULT_CANVAS_IMAGE_OFFSET, DEFAULT_CANVAS_IMAGE_OFFSET, anchor=tk.NW, image=photo)
         self.canvas.image = photo
+
+    def image_to_opencv(self, file_path, size):
+        self.display_image(self.original_img)
+        self.opencv_image = cv2.imread(file_path)
+        self.opencv_image = cv2.resize(self.opencv_image, size)
+
+        self.opencv_image_gray = cv2.cvtColor(self.opencv_image, cv2.COLOR_BGR2GRAY)
+        self.opencv_image_blurred = cv2.GaussianBlur(self.opencv_image_gray, (5, 5), 0)
+        self.opencv_image_edges = cv2.Canny(self.opencv_image_blurred, 50, 150)
+        self.opencv_image_contours, _ = cv2.findContours(self.opencv_image_edges, cv2.RETR_EXTERNAL,
+                                                         cv2.CHAIN_APPROX_SIMPLE)
+        for contour in self.opencv_image_contours:
+            contour += DEFAULT_CANVAS_IMAGE_OFFSET
+        self.opencv_image_points = []
+        for contour in self.opencv_image_contours:
+            for point in contour:
+                x, y = point[0]
+                self.opencv_image_points.append((x, y))
 
     def pick_control_point(self):
         self.canvas.bind("<Button-1>", self.capture_bezier_coordinates)
@@ -225,19 +251,19 @@ class NomogramApp:
         self.canvas.tag_bind(point_id, "<B1-Motion>",
                              lambda event: self.drag_point(event, axis_id, point_id))
         self.canvas.tag_bind(point_id, "<ButtonRelease-1>",
-                             lambda event: self.stop_drag_point(axis_id, point_id))
+                             lambda event: self.stop_drag_point(event, axis_id, point_id))
 
     def start_drag_point(self, event, point_id: str):
         # Record the starting position of the control point
         # adapted from https://stackoverflow.com/questions/29789554/tkinter-draw-rectangle-using-a-mouse
-        self.start_x = self.canvas.canvasx(event.x)
-        self.start_y = self.canvas.canvasy(event.y)
+        self.start_x, self.start_y = calculate_opencv_closest_point(self.opencv_image_points,
+                                                                    self.canvas.canvasx(event.x),
+                                                                    self.canvas.canvasy(event.y))
         self.current_point_id = point_id
 
     def drag_point(self, event, axis_id: str, point_id: str):
-        # Move the control point based on the mouse movement
-        cur_x = self.canvas.canvasx(event.x)
-        cur_y = self.canvas.canvasy(event.y)
+        cur_x, cur_y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                                      self.canvas.canvasy(event.y))
         delta_x = cur_x - self.start_x
         delta_y = cur_y - self.start_y
 
@@ -246,7 +272,6 @@ class NomogramApp:
         self.start_x = cur_x
         self.start_y = cur_y
         point_index = int(point_id.split('_')[-1])
-        # Update the control point's position in the data structure
         if "control" in point_id:
             # Update the control point's position in the data structure
             self.control_points[axis_id][point_index] = (cur_x, cur_y)
@@ -255,10 +280,10 @@ class NomogramApp:
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (cur_x, cur_y, self.axis_points[axis_id][point_index][-1])
 
-    def stop_drag_point(self, axis_id: str, point_id: str):
+    def stop_drag_point(self, event, axis_id: str, point_id: str):
         # Update the control point's position in the data structure
-        x, y = self.canvas.coords(point_id)[0], self.canvas.coords(point_id)[1]
-
+        x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                              self.canvas.canvasy(event.y))
         point_index = int(point_id.split('_')[-1])
 
         if "control" in point_id:
@@ -298,7 +323,8 @@ class NomogramApp:
             messagebox.showerror("Error", "Please select an axis name")
         try:
             if axis_id is not None and axis_id != "Select axis:":
-                x, y = event.x, event.y
+                x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                                      self.canvas.canvasy(event.y))
 
                 self.control_points[axis_id].append((x, y))
 
@@ -325,8 +351,8 @@ class NomogramApp:
         axis_id = self.axis_id_variable.get()
         if axis_id is not None:
             if self.nomogram_axes[axis_id].get_axis_drawn():
-                x, y = event.x, event.y
-
+                x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                                      self.canvas.canvasy(event.y))
                 point_value = simpledialog.askfloat("Enter Point Value", "Enter the value for the selected point:")
                 # Unbind the callback to stop capturing coordinates
                 self.canvas.unbind("<Button-1>")
