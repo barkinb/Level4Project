@@ -157,7 +157,7 @@ class Axis:
         for i, (x, y) in enumerate(random_points):
             x_float, y_float = float(x), float(y)
             # Calculate the corresponding axis value using your fitting function
-            axis_value = self.find_value_at_point([x_float, y_float])
+            axis_value = self.find_axis_value_at_point([x_float, y_float])
 
             # Display the axis value next to the point
             text_x = x_float + 5
@@ -171,7 +171,7 @@ class Axis:
 
         self.axis_points_generated = True
 
-    def find_value_at_point(self, point: []):
+    def find_axis_value_at_point(self, point: []):
         return fitting_function(self.axis_equation_coefficients,
                                 np.array(point), self.diffs)
 
@@ -202,7 +202,7 @@ class Axis:
 
                     # Use fitting_function to find the axis_value
 
-                    axis_value = self.find_value_at_point(scaled_point)
+                    axis_value = self.find_axis_value_at_point(scaled_point)
 
                     # Use self.distribution.pdf to find the probability density at that point
                     self.probability_at_point[i] = self.get_probability_at_point(axis_value)

@@ -83,17 +83,16 @@ class Isopleth:
         self.intersections = self.find_isopleth_intersections()
         for i in self.intersections:
             axis_id, x, y = i[0], i[1][0], i[1][1]
-            axis_value = self.nomogram_axes[axis_id].find_value_at_point([x, y])
-            if self.nomogram_axes[axis_id].get_distribution() is not None:
-                probability_density = self.nomogram_axes[axis_id].get_probability_at_point(axis_value)
-                # Display axis value and probability density near the intersection point with tags
-                self.canvas.create_text(x+50, y+50, anchor="nw", fill="black",
-                                        text=f"Axis Value: {axis_value:.3f}, Probability Density: {probability_density:.3f}",
-                                        tags=f"axis_values_{axis_id}")
-            else:
-                self.canvas.create_text(x + 50, y + 50, anchor="nw",fill="black",
-                                        text=f"Axis Value: {axis_value:.3f}",
-                                        tags=f"axis_values_{axis_id}")
+            mean = self.nomogram_axes[axis_id].get_mean_at_point([x, y])
+            std_deviation = self.nomogram_axes[axis_id].get_standard_deviation_at_point([x, y])
+            if mean is not None and std_deviation is not None:
+                self.canvas.create_text(x + 50, y + 50, anchor="nw", fill="black",
+                                        text=f"µ: {mean:.3f}, σ: {std_deviation:.3f}",
+                                        tags=f"probability_values_{axis_id}")
+            elif mean is not None:
+                self.canvas.create_text(x + 50, y + 50, anchor="nw", fill="black",
+                                        text=f"µ: {mean:.3f}",
+                                        tags=f"probability_values_{axis_id}")
 
     def get_implicit_equation(self):
         # returns implicit equation
@@ -103,6 +102,7 @@ class Isopleth:
         return lambda x, y: self.implicit_axis_equation.subs([(self.x, x), (self.y, y)])
 
     def find_isopleth_intersections(self):
+
         intersections = []
         for axis_id, axis in self.nomogram_axes.items():
             if axis.axis_equation_generated():
