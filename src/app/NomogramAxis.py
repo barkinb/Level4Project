@@ -10,7 +10,7 @@ from scipy.optimize import least_squares, fsolve
 from src.app.utils.maths_functions import objective_function, fitting_function
 from DistributionParser import parse_distribution
 
-NUMBER_OF_DETAIL = 500  # multiple of 5
+NUMBER_OF_DETAIL = 50  # multiple of 5
 DEFAULT_CURVE_WIDTH = 2
 DEFAULT_CURVE_COLOUR = "blue"
 DEFAULT_POINT_SIZE = 20
@@ -59,6 +59,8 @@ class Axis:
         self.scaled_points_array = None
 
     def draw(self) -> bool:
+        if len(self.control_points) <2:
+            self.canvas.delete(self.curve)
         if len(self.control_points) >= 2:
             if self.curve is not None:
                 self.canvas.delete(self.curve)

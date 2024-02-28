@@ -50,7 +50,7 @@ class NomogramApp:
         root_window.bind('<Control-b>', lambda event: self.draw_bezier())
         root_window.bind('<Control-a>', lambda event: self.pick_axis_point())
         root_window.bind('<Control-i>', lambda event: self.create_isopleth())
-        root_window.bind('<Control-BackSpace>', lambda event: self.delete_button(event))
+        root_window.bind('<Control-n>', lambda event: self.add_new_axis_id())
 
     def create_toolbar(self):
         # Create a frame to hold the toolbar buttons
@@ -113,7 +113,6 @@ class NomogramApp:
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
             messagebox.showerror("Error", f"{e}")
-
     def create_left_panel(self):
         self.left_panel_frame = tk.Frame(self.root, bd=1, relief=tk.RAISED)
         self.left_panel_frame.pack(side=tk.LEFT, fill=tk.Y)
@@ -187,7 +186,6 @@ class NomogramApp:
         else:
             new_axis_id = messagebox.showerror("Error", "This Axis ID already exists")
             self.add_new_axis_id()
-
     def select_image_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
         try:
@@ -214,7 +212,7 @@ class NomogramApp:
             self.canvas = None
             self.original_img = None
 
-        self.canvas = tk.Canvas(self.root, width=image.width + 2 * DEFAULT_CANVAS_IMAGE_OFFSET,
+        self.canvas = tk.Canvas(self.root, width=image.width * 2,
                                 height=image.height + 2 * DEFAULT_CANVAS_IMAGE_OFFSET,
                                 background="white")
         self.canvas.pack()
@@ -245,16 +243,77 @@ class NomogramApp:
 
     def pick_axis_point(self):
         self.canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
+    def capture_bezier_coordinates(self, event):
+        axis_id = self.axis_id_variable.get()
+        if axis_id == "Select axis:":
+            messagebox.showerror("Error", "Please select an axis name")
+        try:
+            if axis_id is not None and axis_id != "Select axis:":
+                x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                                      self.canvas.canvasy(event.y))
 
-    def move_point(self, point_id: str, axis_id: str):
+                self.control_points[axis_id].append((x, y))
+
+                point_size = 5
+                control_point_id = f"control{axis_id}_{len(self.control_points[axis_id]) - 1}"
+
+                self.canvas.create_oval(
+                    x - point_size, y - point_size, x + point_size, y + point_size,
+                    fill="orange", outline="black",
+                    tags=(control_point_id, "control_point", f"control_points_{axis_id}")
+                )
+
+                # Bind events only for the newly created control point
+                self.adjust_point(control_point_id, axis_id)
+            if axis_id in self.nomogram_axes:  # if there is already a Bézier curve
+                self.draw_bezier(axis_id)
+                self.update_points(axis_id)
+
+        finally:
+            self.update_left_panel_content()
+            self.canvas.unbind("<Button-1>")
+
+    def capture_axis_point_coordinates(self, event):
+        axis_id = self.axis_id_variable.get()
+        if axis_id is not None:
+            if self.nomogram_axes[axis_id].get_axis_drawn():
+                x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                                      self.canvas.canvasy(event.y))
+                point_value = simpledialog.askfloat("Enter Point Value", "Enter the value for the selected point:")
+                # Unbind the callback to stop capturing coordinates
+                self.canvas.unbind("<Button-1>")
+                if point_value is not None:
+                    if axis_id not in self.control_points.keys():
+                        messagebox.showwarning("Curve Not Found", f"Bezier curve for axis '{axis_id}' does not exist.")
+                    elif axis_id not in self.axis_points.keys():
+                        self.axis_points[axis_id] = []
+                    self.axis_points[axis_id].append((x, y, point_value))
+                    point_size = 2.5
+                    axis_point_id = f"axis{axis_id}_{len(self.axis_points[axis_id]) - 1}"
+
+                    self.canvas.create_oval(
+                        x - point_size, y - point_size, x + point_size, y + point_size,
+                        fill="yellow", outline="black", tags=(axis_point_id, "axis_point", f"axis_points_{axis_id}")
+                    )
+                    self.adjust_point(axis_point_id, axis_id)
+                    self.update_points(axis_id)
+                    try:
+
+                        self.update_left_panel_content()
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Panel could not be updated{e}")
+                self.canvas.unbind("<Button-1>")
+            else:
+                messagebox.showwarning("Please draw the axis first")
+    def adjust_point(self, point_id: str, axis_id: str):
         self.canvas.tag_bind(point_id, "<Button-1>",
-                             lambda event: self.start_drag_point(event, axis_id))
+                             lambda event: self.start_adjust_point(event, point_id))
         self.canvas.tag_bind(point_id, "<B1-Motion>",
                              lambda event: self.drag_point(event, axis_id, point_id))
         self.canvas.tag_bind(point_id, "<ButtonRelease-1>",
                              lambda event: self.stop_drag_point(event, axis_id, point_id))
 
-    def start_drag_point(self, event, point_id: str):
+    def start_adjust_point(self, event, point_id: str):
         # Record the starting position of the control point
         # adapted from https://stackoverflow.com/questions/29789554/tkinter-draw-rectangle-using-a-mouse
         self.start_x, self.start_y = calculate_opencv_closest_point(self.opencv_image_points,
@@ -318,69 +377,6 @@ class NomogramApp:
         else:
             self.draw_bezier(axis_id)
 
-    def capture_bezier_coordinates(self, event):
-        axis_id = self.axis_id_variable.get()
-        if axis_id == "Select axis:":
-            messagebox.showerror("Error", "Please select an axis name")
-        try:
-            if axis_id is not None and axis_id != "Select axis:":
-                x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                                                      self.canvas.canvasy(event.y))
-
-                self.control_points[axis_id].append((x, y))
-
-                point_size = 5
-                control_point_id = f"control{axis_id}_{len(self.control_points[axis_id]) - 1}"
-
-                self.canvas.create_oval(
-                    x - point_size, y - point_size, x + point_size, y + point_size,
-                    fill="orange", outline="black",
-                    tags=(control_point_id, "control_point", f"control_points_{axis_id}")
-                )
-
-                # Bind events only for the newly created control point
-                self.move_point(control_point_id, axis_id)
-            if axis_id in self.nomogram_axes:  # if there is already a Bézier curve
-                self.draw_bezier(axis_id)
-                self.update_points(axis_id)
-
-        finally:
-            self.update_left_panel_content()
-            self.canvas.unbind("<Button-1>")
-
-    def capture_axis_point_coordinates(self, event):
-        axis_id = self.axis_id_variable.get()
-        if axis_id is not None:
-            if self.nomogram_axes[axis_id].get_axis_drawn():
-                x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                                                      self.canvas.canvasy(event.y))
-                point_value = simpledialog.askfloat("Enter Point Value", "Enter the value for the selected point:")
-                # Unbind the callback to stop capturing coordinates
-                self.canvas.unbind("<Button-1>")
-                if point_value is not None:
-                    if axis_id not in self.control_points.keys():
-                        messagebox.showwarning("Curve Not Found", f"Bezier curve for axis '{axis_id}' does not exist.")
-                    elif axis_id not in self.axis_points.keys():
-                        self.axis_points[axis_id] = []
-                    self.axis_points[axis_id].append((x, y, point_value))
-                    point_size = 2.5
-                    axis_point_id = f"axis{axis_id}_{len(self.axis_points[axis_id]) - 1}"
-
-                    self.canvas.create_oval(
-                        x - point_size, y - point_size, x + point_size, y + point_size,
-                        fill="yellow", outline="black", tags=(axis_point_id, "axis_point", f"axis_points_{axis_id}")
-                    )
-                    self.move_point(axis_point_id, axis_id)
-                    self.update_points(axis_id)
-                    try:
-
-                        self.update_left_panel_content()
-                    except Exception as e:
-                        messagebox.showerror("Error", f"Panel could not be updated{e}")
-                self.canvas.unbind("<Button-1>")
-            else:
-                messagebox.showwarning("Please draw the axis first")
-
     def save_distribution(self):
         distribution_text = self.distribution_entry.get()
         axis_id = self.axis_id_variable.get()
@@ -429,30 +425,17 @@ class NomogramApp:
             print(traceback.print_exc())
             messagebox.showerror("Error", f"Error {e}")
 
-    def delete_button(self, event):
-        print("delete pressed")
-        selected_axis = self.axis_id_variable.get()
-        if selected_axis == "Select axis:":
-            return
-
-        event_x, event_y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
-        print(event_x, event_y)
-        print(self.canvas.find_all())
-        point_id = self.canvas.find_closest(event_x, event_y)
+    def delete_point(self, axis_id, point_id):
+        point_index = int(point_id.split('_')[-1])
+        self.canvas.delete(point_id)
         print(point_id)
-        if point_id in self.canvas.find_withtag(f"control_points_{selected_axis}"):
-            control_point_index = int(point_id.split('_')[-1])
-            self.control_points[selected_axis].pop(control_point_index)
-            self.canvas.delete(point_id)
-            self.update_bezier(selected_axis)
-            self.update_points(selected_axis)
-            self.update_left_panel_content()
-        elif point_id in self.canvas.find_withtag(f"axis_points_{selected_axis}"):
-            axis_point_index = int(point_id.split('_')[-1])
-            self.axis_points[selected_axis].pop(axis_point_index)
-            self.canvas.delete(point_id)
-            self.update_points(selected_axis)
-            self.update_left_panel_content()
+        if "control" in point_id:
+            self.control_points[axis_id].pop(point_index)
+            self.update_bezier(axis_id)
+        elif "axis" in point_id:
+            self.axis_points[axis_id].pop(point_index)
+        self.update_points(axis_id)
+        self.canvas.unbind("<BackSpace>")
 
 
 if __name__ == "__main__":
