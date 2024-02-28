@@ -15,6 +15,7 @@ DEFAULT_CANVAS_IMAGE_OFFSET = 25
 class NomogramApp:
     def __init__(self, root_window):
 
+        self.time = None
         self.opencv_image_points = None
         self.opencv_image = None
         self.number_of_complete_axis = 0
@@ -113,6 +114,7 @@ class NomogramApp:
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
             messagebox.showerror("Error", f"{e}")
+
     def create_left_panel(self):
         self.left_panel_frame = tk.Frame(self.root, bd=1, relief=tk.RAISED)
         self.left_panel_frame.pack(side=tk.LEFT, fill=tk.Y)
@@ -186,6 +188,7 @@ class NomogramApp:
         else:
             new_axis_id = messagebox.showerror("Error", "This Axis ID already exists")
             self.add_new_axis_id()
+
     def select_image_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
         try:
@@ -243,6 +246,7 @@ class NomogramApp:
 
     def pick_axis_point(self):
         self.canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
+
     def capture_bezier_coordinates(self, event):
         axis_id = self.axis_id_variable.get()
         if axis_id == "Select axis:":
@@ -260,7 +264,7 @@ class NomogramApp:
                 self.canvas.create_oval(
                     x - point_size, y - point_size, x + point_size, y + point_size,
                     fill="orange", outline="black",
-                    tags=(control_point_id, "control_point", f"control_points_{axis_id}")
+                    tags=(control_point_id, "control_points", f"control_points_{axis_id}")
                 )
 
                 # Bind events only for the newly created control point
@@ -293,7 +297,7 @@ class NomogramApp:
 
                     self.canvas.create_oval(
                         x - point_size, y - point_size, x + point_size, y + point_size,
-                        fill="yellow", outline="black", tags=(axis_point_id, "axis_point", f"axis_points_{axis_id}")
+                        fill="yellow", outline="black", tags=(axis_point_id, "axis_points", f"axis_points_{axis_id}")
                     )
                     self.adjust_point(axis_point_id, axis_id)
                     self.update_points(axis_id)
@@ -305,6 +309,7 @@ class NomogramApp:
                 self.canvas.unbind("<Button-1>")
             else:
                 messagebox.showwarning("Please draw the axis first")
+
     def adjust_point(self, point_id: str, axis_id: str):
         self.canvas.tag_bind(point_id, "<Button-1>",
                              lambda event: self.start_adjust_point(event, point_id))
@@ -405,10 +410,10 @@ class NomogramApp:
     def create_isopleth(self):
 
         isopleth_id = self.number_isopleths
-
         if len(self.control_points) == 0:
             messagebox.showerror("Error", "No Axis Exist")
             return False
+
         for i in self.nomogram_axes.keys():
             if self.nomogram_axes[i].axis_equation_produced:
                 self.number_of_complete_axis += 1
@@ -416,9 +421,14 @@ class NomogramApp:
             messagebox.showerror("Error", "At least three axis must be created")
             return False
         try:
-            self.isopleths[isopleth_id] = Isopleth(isopleth_id, self.canvas, self.nomogram_axes)
 
-            self.number_isopleths += 1
+            self.time = 0
+            while self.time< 6:
+                self.time += 1
+                self.isopleths[isopleth_id] = Isopleth(isopleth_id, self.canvas, self.nomogram_axes)
+                self.number_isopleths += 1
+                self.root.after(3000, self.create_isopleth)
+
 
         except Exception as e:
 

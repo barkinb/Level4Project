@@ -1,11 +1,10 @@
-import threading
 import tkinter
 import numpy as np
 import sympy
 from bezier import bezier
 from scipy.optimize import fsolve
 
-NUMBER_OF_DETAIL = 1000
+NUMBER_OF_DETAIL = 50
 DEFAULT_LINE_WIDTH = 2
 DEFAULT_LINE_COLOUR = "red"
 
@@ -15,7 +14,6 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 class Isopleth:
     def __init__(self, number: int, canvas: tkinter.Canvas, nomogram_axes: {}, width: int = DEFAULT_LINE_WIDTH,
                  colour: str = DEFAULT_LINE_COLOUR) -> None:
-        self.t = 0
         self.intersections = None
         self.scaled_points = None
         self.colour = colour
@@ -38,11 +36,7 @@ class Isopleth:
         self.produce_control_points()
 
     def produce_control_points(self):
-        # Clear existing control points and related canvas elements
         self.control_points = []
-        self.canvas.delete("axis_points")
-        self.canvas.delete("control_points")
-        self.canvas.delete("axis_values")
 
         leftmost_midpoint = None
         rightmost_midpoint = None
@@ -57,8 +51,12 @@ class Isopleth:
         self.control_points.append(self.nomogram_axes[rightmost_midpoint[0]].get_random_point())
 
         self.draw()
-    def draw(self) -> None:
 
+    def draw(self) -> None:
+        self.canvas.delete("axis_points")
+        self.canvas.delete("control_points")
+        self.canvas.delete("axis_values")
+        self.canvas.delete("bezier_curve")
         self.canvas.delete("isopleth")
         if self.line is not None:
             self.canvas.delete(self.line)
@@ -90,9 +88,7 @@ class Isopleth:
                 self.canvas.create_text(x + 50, y + 50, anchor="nw", fill="black",
                                         text=f"Axis Value: {axis_value:.3f}",
                                         tags=("isopleth", f"axis_values_{axis_id}"))
-        self.t += 1
-        while self.t < 10:
-            threading.Timer(2.5, self.draw).start()
+
     def calculate_implicit_equation(self):
         return lambda x, y: self.implicit_axis_equation.subs([(self.x, x), (self.y, y)])
 

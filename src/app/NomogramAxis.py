@@ -10,7 +10,7 @@ from scipy.optimize import least_squares, fsolve
 from src.app.utils.maths_functions import objective_function, fitting_function
 from DistributionParser import parse_distribution
 
-NUMBER_OF_DETAIL = 50  # multiple of 5
+NUMBER_OF_DETAIL = 150  # multiple of 5
 DEFAULT_CURVE_WIDTH = 2
 DEFAULT_CURVE_COLOUR = "blue"
 DEFAULT_POINT_SIZE = 20
@@ -59,7 +59,7 @@ class Axis:
         self.scaled_points_array = None
 
     def draw(self) -> bool:
-        if len(self.control_points) <2:
+        if len(self.control_points) < 2:
             self.canvas.delete(self.curve)
         if len(self.control_points) >= 2:
             if self.curve is not None:
@@ -76,7 +76,7 @@ class Axis:
             self.scaled_points_middle = (self.scaled_points_middle[0], self.scaled_points_middle[1])
             self.implicit_axis_equation = self.curve_points.implicitize()
             self.curve = self.canvas.create_line(*sum(self.scaled_points, ()), width=self.curve_width,
-                                                 fill=self.curve_colour, tags=f"bezier_axis_curve_{self.name}")
+                                                 fill=self.curve_colour, tags=("bezier_curve", f"bezier_axis_curve_{self.name}"))
             self.axis_drawn = True
             return True
         else:
@@ -120,9 +120,7 @@ class Axis:
         return self.scaled_points_middle
 
     def find_axis_point(self, axis_value: float):
-        global solution
         try:
-
             def equations(variables):
                 x, y = variables
                 # Evaluate the curve value and implicit value
@@ -133,11 +131,10 @@ class Axis:
 
             initial_guess = np.array([0, 0],dtype='float64')
             solution = fsolve(equations, initial_guess)
-
+            return solution[0], solution[1]
 
         except TypeError:
             print(traceback.print_last())
-        return solution[0], solution[1]
 
     def start_show_axis_points_canvas(self) -> None:
 
@@ -166,10 +163,10 @@ class Axis:
             text_y = y_float - 5
 
             self.canvas.create_oval(x_float - 2.5, y_float - 2.5, x_float + 2.5, y_float + 2.5, fill="green",
-                                    outline="orange", tags=f"axis_values_{self.name}")
+                                    outline="orange", tags=("axis_values", f"axis_values_{self.name}"))
             self.canvas.create_text(text_x, text_y, anchor="nw",
                                     text=f"Estimate {axis_value:.3f}", fill="black",
-                                    tags=f"axis_values_{self.name}")
+                                    tags=("axis_values", f"axis_values_{self.name}"))
 
         self.axis_points_generated = True
 
@@ -206,7 +203,7 @@ class Axis:
 
                     axis_value = self.find_axis_value_at_point(scaled_point)
 
-                    # Use self.distribution.pdf to find the probability density at that point
+                    # Use self.distribution to find the probability density/mass at that point
                     self.probability_at_point[i] = self.get_probability_at_point(axis_value)
 
                 # Find the maximum probability
@@ -263,7 +260,3 @@ class Axis:
 
     def get_axis_drawn(self):
         return self.axis_drawn
-
-    def __delete__(self, canvas):
-        self.curve = None
-        canvas.delete(self.curve)
