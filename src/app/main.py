@@ -9,16 +9,45 @@ from PIL import Image, ImageTk
 import traceback
 import cv2
 from NomogramAxis import Axis
-from src.app.utils.maths_functions import calculate_opencv_closest_point
-from src.app.Isopleth import Isopleth
+from utils.maths_functions import calculate_opencv_closest_point
+from Isopleth import Isopleth
 
-DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT = 1152, 720
+DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT = 1250, 800
 DEFAULT_CANVAS_IMAGE_OFFSET = 25
+DEFAULT_BEZIER_CONTROL_SIZE = 5
+DEFAULT_BEZIER_CONTROL_COLOUR = "orange"
+DEFAULT_AXIS_CONTROL_SIZE = 2.5
+DEFAULT_AXIS_CONTROL_COLOUR = "yellow"
 
 
 class NomogramApp:
     def __init__(self, root_window):
 
+        self.opencv_image_edges = None
+        self.opencv_image_contours = None
+        self.opencv_image_blurred = None
+        self.opencv_image_gray = None
+        self.save_distribution_button = None
+        self.distribution_entry = None
+        self.distribution_label = None
+        self.axis_id_dropdown = None
+        self.axis_entry_button = None
+        self.isopleth_button = None
+        self.bezier_button = None
+        self.save_project_button = None
+        self.load_project_button = None
+        self.isopleth_icon = None
+        self.axis_entry_icon = None
+        self.bezier_icon = None
+        self.select_button = None
+        self.control_point_button = None
+        self.control_point_icon = None
+        self.select_icon = None
+        self.isopleth_img = None
+        self.axis_entry_img = None
+        self.bezier_img = None
+        self.control_point_img = None
+        self.select_nomogram_img = None
         self.file_path = None
         self.time = None
         self.opencv_image_points = None
@@ -38,7 +67,7 @@ class NomogramApp:
         self.start_y = None
         self.start_x = None
         self.root = root_window
-        self.root.geometry("1280x800")
+        self.root.geometry("1440x900")
         self.root.title("Probabilistic Nomograms")
         self.canvas = None
         self.original_img = None
@@ -118,7 +147,7 @@ class NomogramApp:
 
             toolbar_frame.pack(side=tk.TOP, fill=tk.X)
         except Exception as e:
-            messagebox.showerror("Error", f"{e}")
+            print(traceback.print_exc(), f"{e}")
 
     def create_left_panel(self):
         self.left_panel_frame = tk.Frame(self.root, bd=1, relief=tk.RAISED)
@@ -183,8 +212,9 @@ class NomogramApp:
     def set_axis_id(self, axis_id: str):
         self.axis_id_variable.set(axis_id)
 
-    def add_new_axis_id(self):
-        new_axis_id = simpledialog.askstring("Add New Axis ID", "Enter a new axis ID:")
+    def add_new_axis_id(self, new_axis_id=None):
+        if new_axis_id is None:
+            new_axis_id = simpledialog.askstring("Add New Axis ID", "Enter a new axis ID:")
         if new_axis_id not in self.control_points:
             self.control_points[new_axis_id] = []
             self.axis_id_dropdown['menu'].add_command(label=new_axis_id,
@@ -196,9 +226,9 @@ class NomogramApp:
 
     def select_image_file(self, file_path=None):
         if file_path is None:
-            self.file_path = file_path
-        else:
             self.file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
+        else:
+            self.file_path = file_path
         try:
             if self.file_path:
                 self.original_img = Image.open(self.file_path)
@@ -216,7 +246,7 @@ class NomogramApp:
                     self.image_to_opencv((new_width, new_height))
 
         except Exception as e:
-            messagebox.showerror("Error", f"{e}")
+            print(traceback.print_exc(), f"{e}")
 
     def display_image(self, image: Image.Image):
         if self.canvas:
@@ -257,66 +287,63 @@ class NomogramApp:
 
     def capture_bezier_coordinates(self, event):
         axis_id = self.axis_id_variable.get()
-        if axis_id == "Select axis:":
+        if axis_id == "Select axis:" or axis_id is None:
             messagebox.showerror("Error", "Please select an axis name")
         try:
-            if axis_id is not None and axis_id != "Select axis:":
-                x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                                                      self.canvas.canvasy(event.y))
 
-                self.control_points[axis_id].append((x, y))
+            x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                                  self.canvas.canvasy(event.y))
 
-                point_size = 5
-                control_point_id = f"control{axis_id}_{len(self.control_points[axis_id]) - 1}"
+            self.control_points[axis_id].append((x, y))
 
-                self.canvas.create_oval(
-                    x - point_size, y - point_size, x + point_size, y + point_size,
-                    fill="orange", outline="black",
-                    tags=(control_point_id, "control_points", f"control_points_{axis_id}")
-                )
+            control_point_id = f"control{axis_id}_{len(self.control_points[axis_id]) - 1}"
 
-                # Bind events only for the newly created control point
-                self.adjust_point(control_point_id, axis_id)
+            self.canvas.create_oval(
+                x - DEFAULT_BEZIER_CONTROL_SIZE, y - DEFAULT_BEZIER_CONTROL_SIZE, x + DEFAULT_BEZIER_CONTROL_SIZE,
+                y + DEFAULT_BEZIER_CONTROL_SIZE,
+                fill=DEFAULT_BEZIER_CONTROL_COLOUR, outline="black",
+                tags=(control_point_id, "control_points", f"control_points_{axis_id}")
+            )
+
+            # Bind events only for the newly created control point
+            self.adjust_point(control_point_id, axis_id)
+            self.update_left_panel_content()
             if axis_id in self.nomogram_axes:  # if there is already a Bézier curve
                 self.draw_bezier(axis_id)
                 self.update_points(axis_id)
-
         finally:
-            self.update_left_panel_content()
             self.canvas.unbind("<Button-1>")
 
     def capture_axis_point_coordinates(self, event):
         axis_id = self.axis_id_variable.get()
-        if axis_id is not None:
+        if axis_id == "Select axis:" or axis_id is None:
+            messagebox.showerror("Error", "Please select an axis name")
+        try:
             if self.nomogram_axes[axis_id].get_axis_drawn():
                 x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
                                                       self.canvas.canvasy(event.y))
                 point_value = simpledialog.askfloat("Enter Point Value", "Enter the value for the selected point:")
-                # Unbind the callback to stop capturing coordinates
-                self.canvas.unbind("<Button-1>")
+
                 if point_value is not None:
                     if axis_id not in self.control_points.keys():
                         messagebox.showwarning("Curve Not Found", f"Bezier curve for axis '{axis_id}' does not exist.")
                     elif axis_id not in self.axis_points.keys():
                         self.axis_points[axis_id] = []
                     self.axis_points[axis_id].append((x, y, point_value))
-                    point_size = 2.5
                     axis_point_id = f"axis{axis_id}_{len(self.axis_points[axis_id]) - 1}"
 
                     self.canvas.create_oval(
-                        x - point_size, y - point_size, x + point_size, y + point_size,
-                        fill="yellow", outline="black", tags=(axis_point_id, "axis_points", f"axis_points_{axis_id}")
+                        x - DEFAULT_AXIS_CONTROL_SIZE, y - DEFAULT_AXIS_CONTROL_SIZE, x + DEFAULT_AXIS_CONTROL_SIZE,
+                        y + DEFAULT_AXIS_CONTROL_SIZE,
+                        fill=DEFAULT_AXIS_CONTROL_COLOUR, outline="black",
+                        tags=(axis_point_id, "axis_points", f"axis_points_{axis_id}")
                     )
                     self.adjust_point(axis_point_id, axis_id)
+                    self.update_left_panel_content()
                     self.update_points(axis_id)
-                    try:
 
-                        self.update_left_panel_content()
-                    except Exception as e:
-                        messagebox.showerror("Error", f"Panel could not be updated{e}")
-                self.canvas.unbind("<Button-1>")
-            else:
-                messagebox.showwarning("Please draw the axis first")
+        finally:
+            self.canvas.unbind("<Button-1>")
 
     def adjust_point(self, point_id: str, axis_id: str):
         self.canvas.tag_bind(point_id, "<Button-1>",
@@ -337,6 +364,14 @@ class NomogramApp:
     def drag_point(self, event, axis_id: str, point_id: str):
         cur_x, cur_y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
                                                       self.canvas.canvasy(event.y))
+        if cur_x > DEFAULT_CANVAS_WIDTH:
+            cur_x = DEFAULT_CANVAS_WIDTH
+        elif cur_x < 0:
+            cur_x = 0
+        if cur_y > DEFAULT_CANVAS_HEIGHT:
+            cur_y = DEFAULT_CANVAS_HEIGHT
+        elif cur_y < 0:
+            cur_y = 0
         delta_x = cur_x - self.start_x
         delta_y = cur_y - self.start_y
 
@@ -344,6 +379,7 @@ class NomogramApp:
         self.canvas.move(point_id, delta_x, delta_y)
         self.start_x = cur_x
         self.start_y = cur_y
+
         point_index = int(point_id.split('_')[-1])
         if "control" in point_id:
             # Update the control point's position in the data structure
@@ -390,8 +426,9 @@ class NomogramApp:
         else:
             self.draw_bezier(axis_id)
 
-    def save_distribution(self):
-        distribution_text = self.distribution_entry.get()
+    def save_distribution(self, distribution_text=None):
+        if distribution_text is None:
+            distribution_text = self.distribution_entry.get()
         axis_id = self.axis_id_variable.get()
         if axis_id and distribution_text:
             try:
@@ -404,42 +441,42 @@ class NomogramApp:
 
     def load_project(self):
         try:
-            file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
-            if not file_path:
+            file_path_to_load = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
+            if not file_path_to_load:
                 messagebox.showinfo("Info", "Load operation canceled.")
                 return
 
-            with open(file_path, "r") as json_file:
+            with open(file_path_to_load, "r") as json_file:
                 project_data = json.load(json_file)
+
+            directory_path = os.path.dirname(file_path_to_load)
+            self.select_image_file(os.path.join(directory_path, project_data.get("file_path")))
 
             control_points = project_data.get("control_points")
             axis_points = project_data.get("axis_points")
-            nomogram_axes_data = project_data.get("nomogram_axes", {})
-
-            # Update application state with the loaded project data
-            self.control_points = control_points
-            self.axis_points = axis_points
-            self.nomogram_axes = {
-                axis_id: Axis.deserialize(axis_data) for axis_id, axis_data in nomogram_axes_data.items()
-            }
-
-            messagebox.showinfo("Success", "Project loaded successfully.")
+            distributions = project_data.get("distributions")
+            for i in control_points.keys():
+                self.add_new_axis_id(i)
+                self.nomogram_axes[i] = Axis(i, control_points[i], self.canvas)
+                self.nomogram_axes[i].draw()
+                self.nomogram_axes[i].set_axis_points(axis_points[i])
+                self.save_distribution(distributions[i])
 
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to load project: {e}")
-            print(traceback.format_exc())
+            print(traceback.print_exc(), f"{e}")
+            messagebox.showerror("Error", str(e))
 
     def save_project(self):
         if not self.original_img:
             messagebox.showerror("Error", "No image loaded")
             return
-
+        self.check_min_three_axis_generated()
         try:
             project_data = {
                 "file_path": os.path.basename(self.file_path),
                 "control_points": self.control_points,
                 "axis_points": self.axis_points,
-                "nomogram_axes": {axis_id: axis.serialize() for axis_id, axis in self.nomogram_axes.items()},
+                "distributions": {axis_id: axis.get_distribution_str() for axis_id, axis in self.nomogram_axes.items()},
             }
 
             def convert(o):
@@ -450,20 +487,22 @@ class NomogramApp:
                 elif isinstance(o, numpy.int32):
                     return int(o)
 
-            file_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
-            if not file_path:
-                messagebox.showinfo("Info", "Save operation canceled.")
+            file_path_to_save = filedialog.asksaveasfilename(defaultextension=".json",
+                                                             filetypes=[("JSON files", "*.json")])
+            if not file_path_to_save:
                 return
 
-            with open(file_path, "w") as json_file:
+            with open(file_path_to_save, "w") as json_file:
                 json.dump(project_data, json_file, indent=4, default=convert)
 
-
         except Exception as e:
+            print(traceback.print_exc(), f"{e}")
             messagebox.showerror("Error", f"Failed to save project: {e}")
-            print(traceback.format_exc())
 
     def update_points(self, axis_id: str):
+        for i in self.nomogram_axes.keys():
+            if self.nomogram_axes[i].axis_equation_produced:
+                self.number_of_complete_axis += 1
         if axis_id in self.nomogram_axes:
             if axis_id in self.axis_points:
                 self.nomogram_axes[axis_id].set_axis_points(self.axis_points[axis_id])
@@ -476,13 +515,7 @@ class NomogramApp:
         if len(self.control_points) == 0:
             messagebox.showerror("Error", "No Axis Exist")
             return False
-
-        for i in self.nomogram_axes.keys():
-            if self.nomogram_axes[i].axis_equation_produced:
-                self.number_of_complete_axis += 1
-        if self.number_of_complete_axis < 3:
-            messagebox.showerror("Error", "At least three axis must be created")
-            return False
+        self.check_min_three_axis_generated()
         try:
 
             self.time = 0
@@ -490,13 +523,10 @@ class NomogramApp:
                 self.time += 1
                 self.isopleths[isopleth_id] = Isopleth(isopleth_id, self.canvas, self.nomogram_axes)
                 self.number_isopleths += 1
-                self.root.after(3000, self.create_isopleth)
-
+                self.root.after(1000, self.create_isopleth)
 
         except Exception as e:
-
-            print(traceback.print_exc())
-            messagebox.showerror("Error", f"Error {e}")
+            print(traceback.print_exc(), f"{e}")
 
     def delete_point(self, axis_id, point_id):
         point_index = int(point_id.split('_')[-1])
@@ -510,7 +540,10 @@ class NomogramApp:
         self.update_points(axis_id)
         self.canvas.unbind("<BackSpace>")
 
-
+    def check_min_three_axis_generated(self) -> bool:
+        if self.number_of_complete_axis < 3:
+            messagebox.showerror("Error", "At least three axis must be created")
+            return False
 if __name__ == "__main__":
     root = tk.Tk()
     root.resizable(width=False, height=False)  # disables windows resizing for consistency

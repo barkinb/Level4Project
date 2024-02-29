@@ -7,7 +7,7 @@ import sympy
 from bezier import bezier
 from scipy.optimize import least_squares, fsolve
 
-from src.app.utils.maths_functions import objective_function, fitting_function
+from utils.maths_functions import objective_function, fitting_function
 from DistributionParser import parse_distribution
 
 NUMBER_OF_DETAIL = 150  # multiple of 5
@@ -60,7 +60,7 @@ class Axis:
         self.scaled_points_array = None
 
     def draw(self) -> bool:
-        if len(self.control_points) < 2:
+        if 0 < len(self.control_points) < 2:
             self.canvas.delete(self.curve)
         if len(self.control_points) >= 2:
             if self.curve is not None:
@@ -87,7 +87,7 @@ class Axis:
 
     def set_axis_points(self, axis_points: []):
         self.axis_points = axis_points
-        if len(self.axis_points) > 2:
+        if len(self.axis_points) > 3:
             self.fit_axis_equation()
 
     def set_control_points(self, control_points: []):
@@ -243,6 +243,9 @@ class Axis:
     def get_distribution(self):
         return self.distribution
 
+    def get_distribution_str(self):
+        return self.distribution_str
+
     def get_distribution_type(self):
         return self.distribution_type
 
@@ -261,8 +264,3 @@ class Axis:
 
     def get_axis_drawn(self):
         return self.axis_drawn
-
-    def serialize(self):
-        return {
-            "distribution": self.distribution_str
-        }

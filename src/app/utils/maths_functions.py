@@ -2,6 +2,8 @@ import numpy as np
 
 from scipy.spatial.distance import cdist
 
+
+
 def fitting_function(coefficients, xy, diffs):
     x, y = xy.T
     a0, a1, a2, a3, a4, a5, a6, a7 = coefficients
@@ -28,6 +30,7 @@ def calculate_opencv_closest_point(nodes, x, y):
     c_distances = cdist(np.asarray([x, y]).reshape(1, -1), nodes)
     if c_distances.min() > 50:
         return starting_point
+
     else:
 
         minimum_distance = c_distances.argmin()

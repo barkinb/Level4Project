@@ -2,10 +2,8 @@ Pipenv==2023.10.3
 Numpy==1.25.0
 Scipy==1.11.3
 PILLOW==10.1.0
-PyX==0.16.0
-iPyCanvas==0.13.1
-PyMC==4.0.0
 opencv-python==4.8.1.78
 bezier==2023.7.28
 sympy ==1.12
 tkinter-tooltip ==3.0.0
+pynguin ==0.35.0
