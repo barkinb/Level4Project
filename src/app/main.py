@@ -1,5 +1,9 @@
+import json
+import os
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
+
+import numpy
 from tktooltip import ToolTip
 from PIL import Image, ImageTk
 import traceback
@@ -15,6 +19,7 @@ DEFAULT_CANVAS_IMAGE_OFFSET = 25
 class NomogramApp:
     def __init__(self, root_window):
 
+        self.file_path = None
         self.time = None
         self.opencv_image_points = None
         self.opencv_image = None
@@ -189,11 +194,14 @@ class NomogramApp:
             new_axis_id = messagebox.showerror("Error", "This Axis ID already exists")
             self.add_new_axis_id()
 
-    def select_image_file(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
+    def select_image_file(self, file_path=None):
+        if file_path is None:
+            self.file_path = file_path
+        else:
+            self.file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
         try:
-            if file_path:
-                self.original_img = Image.open(file_path)
+            if self.file_path:
+                self.original_img = Image.open(self.file_path)
                 canvas_width, canvas_height = DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT
                 img_width, img_height = self.original_img.size
                 aspect_ratio = img_width / img_height
@@ -205,7 +213,7 @@ class NomogramApp:
                         new_width = canvas_width
                         new_height = int(canvas_width / aspect_ratio)
                     self.original_img = self.original_img.resize((new_width, new_height), Image.LANCZOS)
-                    self.image_to_opencv(file_path, (new_width, new_height))
+                    self.image_to_opencv((new_width, new_height))
 
         except Exception as e:
             messagebox.showerror("Error", f"{e}")
@@ -223,9 +231,9 @@ class NomogramApp:
         self.canvas.create_image(DEFAULT_CANVAS_IMAGE_OFFSET, DEFAULT_CANVAS_IMAGE_OFFSET, anchor=tk.NW, image=photo)
         self.canvas.image = photo
 
-    def image_to_opencv(self, file_path, size):
+    def image_to_opencv(self, size):
         self.display_image(self.original_img)
-        self.opencv_image = cv2.imread(file_path)
+        self.opencv_image = cv2.imread(self.file_path)
         self.opencv_image = cv2.resize(self.opencv_image, size)
 
         self.opencv_image_gray = cv2.cvtColor(self.opencv_image, cv2.COLOR_BGR2GRAY)
@@ -395,10 +403,65 @@ class NomogramApp:
         self.update_left_panel_content()
 
     def load_project(self):
-        pass
+        try:
+            file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
+            if not file_path:
+                messagebox.showinfo("Info", "Load operation canceled.")
+                return
+
+            with open(file_path, "r") as json_file:
+                project_data = json.load(json_file)
+
+            control_points = project_data.get("control_points")
+            axis_points = project_data.get("axis_points")
+            nomogram_axes_data = project_data.get("nomogram_axes", {})
+
+            # Update application state with the loaded project data
+            self.control_points = control_points
+            self.axis_points = axis_points
+            self.nomogram_axes = {
+                axis_id: Axis.deserialize(axis_data) for axis_id, axis_data in nomogram_axes_data.items()
+            }
+
+            messagebox.showinfo("Success", "Project loaded successfully.")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load project: {e}")
+            print(traceback.format_exc())
 
     def save_project(self):
-        pass
+        if not self.original_img:
+            messagebox.showerror("Error", "No image loaded")
+            return
+
+        try:
+            project_data = {
+                "file_path": os.path.basename(self.file_path),
+                "control_points": self.control_points,
+                "axis_points": self.axis_points,
+                "nomogram_axes": {axis_id: axis.serialize() for axis_id, axis in self.nomogram_axes.items()},
+            }
+
+            def convert(o):
+                if isinstance(o, numpy.int64):
+                    return int(o)
+                elif isinstance(o, numpy.float64):
+                    return float(o)
+                elif isinstance(o, numpy.int32):
+                    return int(o)
+
+            file_path = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("JSON files", "*.json")])
+            if not file_path:
+                messagebox.showinfo("Info", "Save operation canceled.")
+                return
+
+            with open(file_path, "w") as json_file:
+                json.dump(project_data, json_file, indent=4, default=convert)
+
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save project: {e}")
+            print(traceback.format_exc())
 
     def update_points(self, axis_id: str):
         if axis_id in self.nomogram_axes:
@@ -423,7 +486,7 @@ class NomogramApp:
         try:
 
             self.time = 0
-            while self.time< 6:
+            while self.time < 6:
                 self.time += 1
                 self.isopleths[isopleth_id] = Isopleth(isopleth_id, self.canvas, self.nomogram_axes)
                 self.number_isopleths += 1

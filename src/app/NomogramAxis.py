@@ -26,6 +26,7 @@ class Axis:
         self.probability_at_point = None
         self.axis_drawn = False
         self.distribution_function = None
+        self.distribution_str = None
         self.distribution_params = None
         self.distribution_type = None
         self.statistics_curve = None
@@ -76,15 +77,13 @@ class Axis:
             self.scaled_points_middle = (self.scaled_points_middle[0], self.scaled_points_middle[1])
             self.implicit_axis_equation = self.curve_points.implicitize()
             self.curve = self.canvas.create_line(*sum(self.scaled_points, ()), width=self.curve_width,
-                                                 fill=self.curve_colour, tags=("bezier_curve", f"bezier_axis_curve_{self.name}"))
+                                                 fill=self.curve_colour,
+                                                 tags=("bezier_curve", f"bezier_axis_curve_{self.name}"))
             self.axis_drawn = True
             return True
         else:
             messagebox.showerror(title="Error", message="Please enter at least two control points to draw an overlay")
             return False
-
-    def add_axis_points(self, point):
-        self.axis_points.append(point)
 
     def set_axis_points(self, axis_points: []):
         self.axis_points = axis_points
@@ -127,9 +126,9 @@ class Axis:
                 curve_value = fitting_function(self.axis_equation_coefficients, np.array([x, y]),
                                                self.diffs)
                 implicit_value = self.calculate_implicit_equation()(x, y)
-                return np.array([curve_value - axis_value, implicit_value],dtype='float64')
+                return np.array([curve_value - axis_value, implicit_value], dtype='float64')
 
-            initial_guess = np.array([0, 0],dtype='float64')
+            initial_guess = np.array([0, 0], dtype='float64')
             solution = fsolve(equations, initial_guess)
             return solution[0], solution[1]
 
@@ -180,6 +179,7 @@ class Axis:
                                 message="Please ensure axis points have been captured")
         if distribution_str == "None":
             self.distribution = None
+
             self.distribution_type = None
             self.distribution_params = None
             self.distribution_function = None
@@ -190,6 +190,7 @@ class Axis:
                 if self.distribution is not None:
                     self.canvas.delete(f"statistics_points_{self.name}")
                 self.distribution = parse_distribution(distribution_str)
+                self.distribution_str = distribution_str
                 self.distribution_type = self.distribution["type"]
                 self.distribution_params = self.distribution["params"]
                 self.distribution_function = self.distribution["function"]
@@ -260,3 +261,8 @@ class Axis:
 
     def get_axis_drawn(self):
         return self.axis_drawn
+
+    def serialize(self):
+        return {
+            "distribution": self.distribution_str
+        }
