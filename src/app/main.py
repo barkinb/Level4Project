@@ -330,6 +330,7 @@ class NomogramApp:
                     elif axis_id not in self.axis_points.keys():
                         self.axis_points[axis_id] = []
                     self.axis_points[axis_id].append((x, y, point_value))
+                    self.axis_points[axis_id].sort(key=lambda el: el[2])
                     axis_point_id = f"axis{axis_id}_{len(self.axis_points[axis_id]) - 1}"
 
                     self.canvas.create_oval(
@@ -401,6 +402,7 @@ class NomogramApp:
             self.update_points(axis_id)
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (x, y, self.axis_points[axis_id][point_index][-1])
+            self.axis_points[axis_id].sort(key=lambda el: el[2])
             self.update_points(axis_id)
         self.update_left_panel_content()
 
