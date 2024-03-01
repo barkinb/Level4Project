@@ -69,7 +69,7 @@ class Isopleth:
                 # Display axis value and probability density near the intersection point with tags
                 self.canvas.create_text(x + 20, y + 15, anchor="nw", fill="red",
                                         text=f"{axis_id}: {axis_value:.3f}, "
-                                             f"pdf/pmf: {probability_density:.3f} and std: {std}",
+                                             f"pdf/pmf: {probability_density:.3f} and std: {std:.3f}",
                                         tags=("isopleth", f"axis_values_{axis_id}"))
             else:
                 self.canvas.create_text(x + 20, y + 15, anchor="nw", fill="red",
@@ -79,7 +79,7 @@ class Isopleth:
     def calculate_implicit_equation(self):
         return lambda x, y: self.implicit_axis_equation.subs([(self.x, x), (self.y, y)])
 
-    def find_isopleth_intersections(self):
+    def find_isopleth_intersections(self) -> [[str, (float, float)]]:
 
         intersections = []
         for axis_id, axis in self.nomogram_axes.items():

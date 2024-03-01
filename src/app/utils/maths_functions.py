@@ -3,7 +3,7 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 
-def fitting_function(coefficients, xy, diffs):
+def fitting_function(coefficients, xy, diffs) -> float:
     x, y = xy.T
     a0, a1, a2, a3, a4, a5, a6, a7 = coefficients
 
@@ -24,7 +24,7 @@ def objective_function(coefficients, xy_values, axis_values, diffs) -> float:
     return errors
 
 
-def closest_point(nodes, x, y, allow_out_of_bounds=False) -> (float, float):
+def get_closest_point(nodes, x, y, allow_out_of_bounds=False) -> (float, float):
     starting_point = x, y
     c_distances = cdist(np.asarray([x, y]).reshape(1, -1), nodes)
     if c_distances.min() > 50:

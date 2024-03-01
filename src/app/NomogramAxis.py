@@ -258,7 +258,7 @@ class Axis:
     def get_distribution_mean(self) -> float:
         return self.distribution_function.mean(*self.distribution_params)
 
-    def get_distribution_params(self):
+    def get_distribution_params(self) -> str:
         return self.distribution_params
 
     def get_random_point(self) -> (float, float):
@@ -270,5 +270,5 @@ class Axis:
 
     def get_standard_deviation_at_point(self, axis_value: float) -> float:
         return standard_deviation(axis_value, self.get_distribution_mean(), len(self.scaled_points))
-    def get_axis_drawn(self):
+    def get_axis_drawn(self) -> bool:
         return self.axis_drawn
