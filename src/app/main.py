@@ -18,40 +18,46 @@ DEFAULT_BEZIER_CONTROL_SIZE = 5
 DEFAULT_BEZIER_CONTROL_COLOUR = "orange"
 DEFAULT_AXIS_CONTROL_SIZE = 2.5
 DEFAULT_AXIS_CONTROL_COLOUR = "yellow"
+DEFAULT_ISOPLETH_CONTROL_SIZE = 5
+DEFAULT_ISOPLETH_CONTROL_COLOUR = 'green'
+DEFAULT_ROOT_HEIGHT = 900
+DEFAULT_ROOT_WIDTH = 1440
 
 
 class NomogramApp:
     def __init__(self, root_window):
 
-        self.opencv_image_edges = None
+        self.isopleth = None
+        self.isopleth_control_points = None
         self.opencv_image_contours = None
-        self.opencv_image_blurred = None
+        self.opencv_image_points = None
+        self.opencv_image_edges = None
         self.opencv_image_gray = None
-        self.save_distribution_button = None
+        self.opencv_image_blurred = None
+        self.opencv_image = None
+        self.file_path = None
         self.distribution_entry = None
         self.distribution_label = None
         self.axis_id_dropdown = None
         self.axis_entry_button = None
         self.isopleth_button = None
         self.bezier_button = None
+        self.control_point_button = None
+        self.select_button = None
         self.save_project_button = None
         self.load_project_button = None
         self.isopleth_icon = None
         self.axis_entry_icon = None
         self.bezier_icon = None
-        self.select_button = None
-        self.control_point_button = None
         self.control_point_icon = None
         self.select_icon = None
-        self.isopleth_img = None
-        self.axis_entry_img = None
         self.bezier_img = None
+        self.axis_entry_img = None
+        self.isopleth_img = None
         self.control_point_img = None
+        self.save_distribution_button = None
         self.select_nomogram_img = None
-        self.file_path = None
-        self.time = None
-        self.opencv_image_points = None
-        self.opencv_image = None
+        self.time = 0
         self.number_of_complete_axis = 0
         self.axis_id_variable = None
         self.axis_label = None
@@ -67,7 +73,7 @@ class NomogramApp:
         self.start_y = None
         self.start_x = None
         self.root = root_window
-        self.root.geometry("1440x900")
+        self.root.geometry(f"{DEFAULT_ROOT_WIDTH}x{DEFAULT_ROOT_HEIGHT}")
         self.root.title("Probabilistic Nomograms")
         self.canvas = None
         self.original_img = None
@@ -76,15 +82,14 @@ class NomogramApp:
         self.nomogram_axes = {}
         self.isopleths = {}
         self.create_toolbar()
-        # self.create_left_panel()
+        #self.create_left_panel()
         self.distributions = 0
         self.number_isopleths = 0
-        #
         root_window.bind('<Control-l>', lambda event: self.select_image_file())
         root_window.bind('<Control-c>', lambda event: self.pick_control_point())
         root_window.bind('<Control-b>', lambda event: self.draw_bezier())
         root_window.bind('<Control-a>', lambda event: self.pick_axis_point())
-        root_window.bind('<Control-i>', lambda event: self.create_isopleth())
+        root_window.bind('<Control-i>', lambda event: self.create_interactive_isopleths())
         root_window.bind('<Control-n>', lambda event: self.add_new_axis_id())
 
     def create_toolbar(self):
@@ -114,7 +119,8 @@ class NomogramApp:
                                                   command=self.pick_control_point)
             self.bezier_button = tk.Button(toolbar_frame, image=self.bezier_icon, command=self.draw_bezier)
             self.axis_entry_button = tk.Button(toolbar_frame, image=self.axis_entry_icon, command=self.pick_axis_point)
-            self.isopleth_button = tk.Button(toolbar_frame, image=self.isopleth_icon, command=self.create_isopleth)
+            self.isopleth_button = tk.Button(toolbar_frame, image=self.isopleth_icon,
+                                             command=self.create_interactive_isopleths)
 
             self.load_project_button.pack(side=tk.LEFT, padx=50, pady=2, fill=tk.X)
             self.save_project_button.pack(side=tk.LEFT, padx=5, pady=2, fill=tk.X)
@@ -166,38 +172,44 @@ class NomogramApp:
         self.left_panel_content.bind("<Configure>", lambda event: self.on_frame_configure())
 
     def update_left_panel_content(self):
-        pass
-        # for widget in self.left_panel_content.winfo_children():
-        #     widget.destroy()
-        # for axis_id, control_points in self.control_points.items():
-        #     axis_label = tk.Label(self.left_panel_content, text=f"Axis ID: {axis_id}")
-        #     axis_label.pack()
-        #
-        #     control_points_label = tk.Label(self.left_panel_content, text="Control Points:")
-        #     control_points_label.pack()
-        #     for i, (x, y) in enumerate(control_points):
-        #         control_point_label = tk.Label(self.left_panel_content, text=f"  ({x}, {y})")
-        #         control_point_label.pack()
-        #
-        #     if axis_id in self.axis_points:
-        #         axis_values_label = tk.Label(self.left_panel_content, text="Axis Values:")
-        #         axis_values_label.pack()
-        #         for i, (x, y, value) in enumerate(self.axis_points[axis_id]):
-        #             axis_value_label = tk.Label(self.left_panel_content, text=f"  ({x}, {y}, {value})")
-        #             axis_value_label.pack()
-        #
-        #     if axis_id in self.nomogram_axes:
-        #         distributions_label = tk.Label(self.left_panel_content, text="Distributions:")
-        #         distributions_label.pack()
-        #
-        #         if self.nomogram_axes[axis_id].get_distribution() is not None:
-        #             distribution = str(self.nomogram_axes[axis_id].get_distribution())
-        #             distribution_label = tk.Label(self.left_panel_content, text=f"{distribution}")
-        #             distribution_label.pack()
-        #
-        # self.left_panel_canvas.update_idletasks()
-        # self.left_panel_canvas.configure(scroll region=self.left_panel_canvas.bbox("all"))
-        # self.left_panel_content.pack()
+        # Clear the existing content in the left panel
+        for widget in self.left_panel_content.winfo_children():
+            widget.destroy()
+
+        # Iterate through each axis
+        for axis_id, axis in self.nomogram_axes.items():
+            # Create a label to display the axis name
+            axis_label = tk.Label(self.left_panel_content, text=f"Axis ID: {axis_id}")
+            axis_label.pack()
+
+            # Display control points
+            control_points_label = tk.Label(self.left_panel_content, text="Control Points:")
+            control_points_label.pack()
+            for index, control_point in enumerate(self.control_points.get(axis_id, [])):
+                control_point_label = tk.Label(self.left_panel_content, text=f"Point {index + 1}: {control_point}")
+                control_point_label.pack()
+
+            # Display axis points
+            axis_points_label = tk.Label(self.left_panel_content, text="Axis Points:")
+            axis_points_label.pack()
+            for index, axis_point in enumerate(self.axis_points.get(axis_id, [])):
+                axis_point_label = tk.Label(self.left_panel_content, text=f"Point {index + 1}: {axis_point}")
+                axis_point_label.pack()
+
+            # Display distribution
+            distribution_label = tk.Label(self.left_panel_content, text="Distribution:")
+            distribution_label.pack()
+            distribution_text = axis.get_distribution_str()
+            distribution_display = tk.Label(self.left_panel_content, text=distribution_text)
+            distribution_display.pack()
+
+            # Add a separator between axis entries
+            separator = tk.Frame(self.left_panel_content, height=2, bd=1, relief=tk.SUNKEN)
+            separator.pack(fill=tk.X, padx=5, pady=5)
+
+        # Update the canvas
+        self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
+        self.left_panel_canvas.pack()
 
     def on_frame_configure(self):
         self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
@@ -346,6 +358,40 @@ class NomogramApp:
         finally:
             self.canvas.unbind("<Button-1>")
 
+    def create_interactive_isopleths(self):
+        self.canvas.delete("isopleth")
+        self.isopleth_control_points = []
+
+        leftmost_midpoint = None
+        rightmost_midpoint = None
+        for axis_id, axis in self.nomogram_axes.items():
+            midpoint = axis_id, axis.scaled_points_midpoint()
+            if leftmost_midpoint is None or midpoint[1][0] < leftmost_midpoint[1][0]:
+                leftmost_midpoint = midpoint
+            if rightmost_midpoint is None or midpoint[1][0] > rightmost_midpoint[1][0]:
+                rightmost_midpoint = midpoint
+        point1 = self.nomogram_axes[leftmost_midpoint[0]].get_random_point()
+        self.isopleth_control_points.append(point1)
+        point2 = self.nomogram_axes[rightmost_midpoint[0]].get_random_point()
+        self.isopleth_control_points.append(point2)
+
+        isopleth_control_point0_id = f"isopleth_point_0"
+        self.canvas.create_oval(point1[0] - DEFAULT_ISOPLETH_CONTROL_SIZE, point1[1] - DEFAULT_ISOPLETH_CONTROL_SIZE,
+                                point1[0] + DEFAULT_ISOPLETH_CONTROL_SIZE, point1[1] + DEFAULT_ISOPLETH_CONTROL_SIZE,
+                                fill=DEFAULT_ISOPLETH_CONTROL_COLOUR,
+                                tags=(isopleth_control_point0_id, "isopleth_points")
+                                )
+
+        self.adjust_point(isopleth_control_point0_id, leftmost_midpoint[0])
+        isopleth_control_point1_id = f"isopleth_point_1"
+        self.canvas.create_oval(point2[0] - DEFAULT_ISOPLETH_CONTROL_SIZE, point2[1] - DEFAULT_ISOPLETH_CONTROL_SIZE,
+                                point2[0] + DEFAULT_ISOPLETH_CONTROL_SIZE, point2[1] + DEFAULT_ISOPLETH_CONTROL_SIZE,
+                                fill=DEFAULT_ISOPLETH_CONTROL_COLOUR,
+                                tags=(isopleth_control_point1_id, "isopleth_points")
+                                )
+        self.adjust_point(isopleth_control_point1_id, rightmost_midpoint[0])
+        self.create_isopleth()
+
     def adjust_point(self, point_id: str, axis_id: str):
         self.canvas.tag_bind(point_id, "<Button-1>",
                              lambda event: self.start_adjust_point(event, point_id))
@@ -365,12 +411,12 @@ class NomogramApp:
     def drag_point(self, event, axis_id: str, point_id: str):
         cur_x, cur_y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
                                                       self.canvas.canvasy(event.y))
-        if cur_x > DEFAULT_CANVAS_WIDTH:
-            cur_x = DEFAULT_CANVAS_WIDTH
+        if cur_x > DEFAULT_ROOT_WIDTH:
+            cur_x = DEFAULT_ROOT_WIDTH
         elif cur_x < 0:
             cur_x = 0
-        if cur_y > DEFAULT_CANVAS_HEIGHT:
-            cur_y = DEFAULT_CANVAS_HEIGHT
+        if cur_y > DEFAULT_ROOT_HEIGHT:
+            cur_y = DEFAULT_ROOT_HEIGHT
         elif cur_y < 0:
             cur_y = 0
         delta_x = cur_x - self.start_x
@@ -389,6 +435,11 @@ class NomogramApp:
 
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (cur_x, cur_y, self.axis_points[axis_id][point_index][-1])
+            self.axis_points[axis_id].sort(key=lambda el: el[2])
+            self.update_points(axis_id)
+        elif "isopleth" in point_id:
+            self.isopleth_control_points[point_index] = (cur_x, cur_y)
+            self.create_isopleth()
 
     def stop_drag_point(self, event, axis_id: str, point_id: str):
         # Update the control point's position in the data structure
@@ -404,6 +455,8 @@ class NomogramApp:
             self.axis_points[axis_id][point_index] = (x, y, self.axis_points[axis_id][point_index][-1])
             self.axis_points[axis_id].sort(key=lambda el: el[2])
             self.update_points(axis_id)
+        elif "isopleth" in point_id:
+            self.isopleth_control_points[point_index] = (x, y)
         self.update_left_panel_content()
 
     def draw_bezier(self, bezier_axis_id=None):
@@ -472,7 +525,7 @@ class NomogramApp:
         if not self.original_img:
             messagebox.showerror("Error", "No image loaded")
             return
-        self.check_min_three_axis_generated()
+
         try:
             project_data = {
                 "file_path": os.path.basename(self.file_path),
@@ -513,19 +566,9 @@ class NomogramApp:
 
     def create_isopleth(self):
 
-        isopleth_id = self.number_isopleths
-        if len(self.control_points) == 0:
-            messagebox.showerror("Error", "No Axis Exist")
-            return False
-        self.check_min_three_axis_generated()
         try:
-
-            self.time = 0
-            while self.time < 6:
-                self.time += 1
-                self.isopleths[isopleth_id] = Isopleth(isopleth_id, self.canvas, self.nomogram_axes)
-                self.number_isopleths += 1
-                self.root.after(1000, self.create_isopleth)
+            self.isopleth = Isopleth(self.isopleth_control_points, self.canvas,
+                                     self.nomogram_axes)
 
         except Exception as e:
             print(traceback.print_exc(), f"{e}")
@@ -542,10 +585,7 @@ class NomogramApp:
         self.update_points(axis_id)
         self.canvas.unbind("<BackSpace>")
 
-    def check_min_three_axis_generated(self) -> bool:
-        if self.number_of_complete_axis < 3:
-            messagebox.showerror("Error", "At least three axis must be created")
-            return False
+
 if __name__ == "__main__":
     root = tk.Tk()
     root.resizable(width=False, height=False)  # disables windows resizing for consistency

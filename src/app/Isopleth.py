@@ -12,7 +12,8 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 
 
 class Isopleth:
-    def __init__(self, number: int, canvas: tkinter.Canvas, nomogram_axes: {}, width: int = DEFAULT_LINE_WIDTH,
+    def __init__(self, control_points: [], canvas: tkinter.Canvas, nomogram_axes: {},
+                 width: int = DEFAULT_LINE_WIDTH,
                  colour: str = DEFAULT_LINE_COLOUR) -> None:
         self.intersections = None
         self.scaled_points = None
@@ -28,31 +29,13 @@ class Isopleth:
         self.line_points = None
         self.line_colour = DEFAULT_LINE_COLOUR
         self.line_width = DEFAULT_LINE_WIDTH
-        self.isopleth_id = number
         self.canvas = canvas
         self.line = None
         self.nomogram_axes = nomogram_axes
-        self.control_points = []
-        self.produce_control_points()
+        self.control_points = control_points
+        self.draw_isopleth()
 
-    def produce_control_points(self):
-        self.control_points = []
-
-        leftmost_midpoint = None
-        rightmost_midpoint = None
-        for axis_id, axis in self.nomogram_axes.items():
-            midpoint = axis_id, axis.scaled_points_midpoint()
-            if leftmost_midpoint is None or midpoint[1][0] < leftmost_midpoint[1][0]:
-                leftmost_midpoint = midpoint
-            if rightmost_midpoint is None or midpoint[1][0] > rightmost_midpoint[1][0]:
-                rightmost_midpoint = midpoint
-
-        self.control_points.append(self.nomogram_axes[leftmost_midpoint[0]].get_random_point())
-        self.control_points.append(self.nomogram_axes[rightmost_midpoint[0]].get_random_point())
-
-        self.draw()
-
-    def draw(self) -> None:
+    def draw_isopleth(self) -> None:
         self.canvas.delete("axis_points")
         self.canvas.delete("control_points")
         self.canvas.delete("axis_values")
@@ -71,8 +54,11 @@ class Isopleth:
 
         self.implicit_axis_equation = self.line_points.implicitize()
         self.line = self.canvas.create_line(*sum(self.scaled_points, ()), width=self.line_width,
-                                            fill=self.line_colour, tags=("isopleth", f"isopleth_{self.isopleth_id}"))
+                                            fill=self.line_colour, tags="isopleth")
 
+        self.find_intersections()
+
+    def find_intersections(self):
         self.intersections = self.find_isopleth_intersections()
         for i in self.intersections:
             axis_id, x, y = i[0], i[1][0], i[1][1]
@@ -97,7 +83,6 @@ class Isopleth:
         intersections = []
         for axis_id, axis in self.nomogram_axes.items():
             if axis.axis_equation_generated():
-
                 def equations(variables):
                     x, y = variables[0], variables[1]
                     # Evaluate the curve value and implicit value
