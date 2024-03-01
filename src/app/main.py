@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 import traceback
 import cv2
 from NomogramAxis import Axis
-from utils.maths_functions import calculate_opencv_closest_point
+from utils.maths_functions import closest_point
 from Isopleth import Isopleth
 
 DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT = 1250, 800
@@ -303,8 +303,8 @@ class NomogramApp:
             messagebox.showerror("Error", "Please select an axis name")
         try:
 
-            x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                                                  self.canvas.canvasy(event.y))
+            x, y = closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                 self.canvas.canvasy(event.y))
 
             self.control_points[axis_id].append((x, y))
 
@@ -332,8 +332,8 @@ class NomogramApp:
             messagebox.showerror("Error", "Please select an axis name")
         try:
             if self.nomogram_axes[axis_id].get_axis_drawn():
-                x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                                                      self.canvas.canvasy(event.y))
+                x, y = closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                     self.canvas.canvasy(event.y))
                 point_value = simpledialog.askfloat("Enter Point Value", "Enter the value for the selected point:")
 
                 if point_value is not None:
@@ -403,14 +403,14 @@ class NomogramApp:
     def start_adjust_point(self, event, point_id: str):
         # Record the starting position of the control point
         # adapted from https://stackoverflow.com/questions/29789554/tkinter-draw-rectangle-using-a-mouse
-        self.start_x, self.start_y = calculate_opencv_closest_point(self.opencv_image_points,
-                                                                    self.canvas.canvasx(event.x),
-                                                                    self.canvas.canvasy(event.y))
+        self.start_x, self.start_y = closest_point(self.opencv_image_points,
+                                                   self.canvas.canvasx(event.x),
+                                                   self.canvas.canvasy(event.y))
         self.current_point_id = point_id
 
     def drag_point(self, event, axis_id: str, point_id: str):
-        cur_x, cur_y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                                                      self.canvas.canvasy(event.y))
+        cur_x, cur_y = closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                                     self.canvas.canvasy(event.y))
         if cur_x > DEFAULT_ROOT_WIDTH:
             cur_x = DEFAULT_ROOT_WIDTH
         elif cur_x < 0:
@@ -443,8 +443,8 @@ class NomogramApp:
 
     def stop_drag_point(self, event, axis_id: str, point_id: str):
         # Update the control point's position in the data structure
-        x, y = calculate_opencv_closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                                              self.canvas.canvasy(event.y))
+        x, y = closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                             self.canvas.canvasy(event.y))
         point_index = int(point_id.split('_')[-1])
 
         if "control" in point_id:

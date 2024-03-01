@@ -25,7 +25,7 @@ def objective_function(coefficients, xy_values, axis_values, diffs):
     return errors
 
 
-def calculate_opencv_closest_point(nodes, x, y):
+def closest_point(nodes, x, y):
     starting_point = x, y
     c_distances = cdist(np.asarray([x, y]).reshape(1, -1), nodes)
     if c_distances.min() > 50:
