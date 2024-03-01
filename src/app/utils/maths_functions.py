@@ -3,7 +3,6 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 
-
 def fitting_function(coefficients, xy, diffs):
     x, y = xy.T
     a0, a1, a2, a3, a4, a5, a6, a7 = coefficients
@@ -20,19 +19,23 @@ def fitting_function(coefficients, xy, diffs):
             a4 * x ** 2 + a5 * x * y + a6 * y ** 2 + a7)
 
 
-def objective_function(coefficients, xy_values, axis_values, diffs):
+def objective_function(coefficients, xy_values, axis_values, diffs) -> float:
     errors = axis_values - fitting_function(coefficients, xy_values, diffs)
     return errors
 
 
-def closest_point(nodes, x, y):
+def closest_point(nodes, x, y, allow_out_of_bounds=False) -> (float, float):
     starting_point = x, y
     c_distances = cdist(np.asarray([x, y]).reshape(1, -1), nodes)
     if c_distances.min() > 50:
-        return starting_point
-
+        if allow_out_of_bounds:
+            return starting_point
     else:
 
         minimum_distance = c_distances.argmin()
         closest_point = nodes[minimum_distance]
         return closest_point
+
+
+def standard_deviation(value, mean, length) -> float:
+    return np.sqrt(np.sum((value - mean) ** 2) / length)

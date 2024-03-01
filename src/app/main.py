@@ -16,9 +16,9 @@ DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT = 1250, 800
 DEFAULT_CANVAS_IMAGE_OFFSET = 25
 DEFAULT_BEZIER_CONTROL_SIZE = 5
 DEFAULT_BEZIER_CONTROL_COLOUR = "orange"
-DEFAULT_AXIS_CONTROL_SIZE = 2.5
+DEFAULT_AXIS_CONTROL_SIZE = 5
 DEFAULT_AXIS_CONTROL_COLOUR = "yellow"
-DEFAULT_ISOPLETH_CONTROL_SIZE = 5
+DEFAULT_ISOPLETH_CONTROL_SIZE = 7.5
 DEFAULT_ISOPLETH_CONTROL_COLOUR = 'green'
 DEFAULT_ROOT_HEIGHT = 900
 DEFAULT_ROOT_WIDTH = 1440
@@ -26,7 +26,6 @@ DEFAULT_ROOT_WIDTH = 1440
 
 class NomogramApp:
     def __init__(self, root_window):
-
         self.isopleth = None
         self.isopleth_control_points = None
         self.opencv_image_contours = None
@@ -172,44 +171,42 @@ class NomogramApp:
         self.left_panel_content.bind("<Configure>", lambda event: self.on_frame_configure())
 
     def update_left_panel_content(self):
-        # Clear the existing content in the left panel
-        for widget in self.left_panel_content.winfo_children():
-            widget.destroy()
-
-        # Iterate through each axis
-        for axis_id, axis in self.nomogram_axes.items():
-            # Create a label to display the axis name
-            axis_label = tk.Label(self.left_panel_content, text=f"Axis ID: {axis_id}")
-            axis_label.pack()
-
-            # Display control points
-            control_points_label = tk.Label(self.left_panel_content, text="Control Points:")
-            control_points_label.pack()
-            for index, control_point in enumerate(self.control_points.get(axis_id, [])):
-                control_point_label = tk.Label(self.left_panel_content, text=f"Point {index + 1}: {control_point}")
-                control_point_label.pack()
-
-            # Display axis points
-            axis_points_label = tk.Label(self.left_panel_content, text="Axis Points:")
-            axis_points_label.pack()
-            for index, axis_point in enumerate(self.axis_points.get(axis_id, [])):
-                axis_point_label = tk.Label(self.left_panel_content, text=f"Point {index + 1}: {axis_point}")
-                axis_point_label.pack()
-
-            # Display distribution
-            distribution_label = tk.Label(self.left_panel_content, text="Distribution:")
-            distribution_label.pack()
-            distribution_text = axis.get_distribution_str()
-            distribution_display = tk.Label(self.left_panel_content, text=distribution_text)
-            distribution_display.pack()
-
-            # Add a separator between axis entries
-            separator = tk.Frame(self.left_panel_content, height=2, bd=1, relief=tk.SUNKEN)
-            separator.pack(fill=tk.X, padx=5, pady=5)
-
-        # Update the canvas
-        self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
-        self.left_panel_canvas.pack()
+        self.left_panel_content = None
+        # # Iterate through each axis
+        # for axis_id, axis in self.nomogram_axes.items():
+        #     # Create a label to display the axis name
+        #     axis_label = tk.Label(self.left_panel_content, text=f"Axis ID: {axis_id}")
+        #     axis_label.pack()
+        #
+        #     # Display control points
+        #     control_points_label = tk.Label(self.left_panel_content, text="Control Points:")
+        #     control_points_label.pack()
+        #     for index, control_point in enumerate(self.control_points.get(axis_id, [])):
+        #         control_point_label = tk.Label(self.left_panel_content, text=f"Point {index + 1}: {control_point}")
+        #         control_point_label.pack()
+        #
+        #     # Display axis points
+        #     axis_points_label = tk.Label(self.left_panel_content, text="Axis Points:")
+        #     axis_points_label.pack()
+        #     for index, axis_point in enumerate(self.axis_points.get(axis_id, [])):
+        #         axis_point_label = tk.Label(self.left_panel_content, text=f"Point {index + 1}: {axis_point}")
+        #         axis_point_label.pack()
+        #
+        #     # Display distribution
+        #     distribution_label = tk.Label(self.left_panel_content, text="Distribution:")
+        #     distribution_label.pack()
+        #     distribution_text = axis.get_distribution_str()
+        #     distribution_display = tk.Label(self.left_panel_content, text=distribution_text)
+        #     distribution_display.pack()
+        #
+        #     # Add a separator between axis entries
+        #     separator = tk.Frame(self.left_panel_content, height=2, bd=1, relief=tk.SUNKEN)
+        #     separator.pack(fill=tk.X, padx=5, pady=5)
+        #
+        # # Update the canvas
+        # self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
+        # self.left_panel_canvas.pack()
+        pass
 
     def on_frame_configure(self):
         self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
@@ -304,7 +301,7 @@ class NomogramApp:
         try:
 
             x, y = closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                                 self.canvas.canvasy(event.y))
+                                 self.canvas.canvasy(event.y), True)
 
             self.control_points[axis_id].append((x, y))
 
@@ -332,7 +329,7 @@ class NomogramApp:
             messagebox.showerror("Error", "Please select an axis name")
         try:
             if self.nomogram_axes[axis_id].get_axis_drawn():
-                x, y = closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
+                x, y = closest_point(self.nomogram_axes[axis_id].get_axis_scaled_points(), self.canvas.canvasx(event.x),
                                      self.canvas.canvasy(event.y))
                 point_value = simpledialog.askfloat("Enter Point Value", "Enter the value for the selected point:")
 
@@ -394,23 +391,37 @@ class NomogramApp:
 
     def adjust_point(self, point_id: str, axis_id: str):
         self.canvas.tag_bind(point_id, "<Button-1>",
-                             lambda event: self.start_adjust_point(event, point_id))
+                             lambda event: self.start_adjust_point(event, axis_id, point_id))
         self.canvas.tag_bind(point_id, "<B1-Motion>",
                              lambda event: self.drag_point(event, axis_id, point_id))
         self.canvas.tag_bind(point_id, "<ButtonRelease-1>",
                              lambda event: self.stop_drag_point(event, axis_id, point_id))
 
-    def start_adjust_point(self, event, point_id: str):
+    def start_adjust_point(self, event, axis_id: str, point_id: str):
         # Record the starting position of the control point
         # adapted from https://stackoverflow.com/questions/29789554/tkinter-draw-rectangle-using-a-mouse
-        self.start_x, self.start_y = closest_point(self.opencv_image_points,
-                                                   self.canvas.canvasx(event.x),
-                                                   self.canvas.canvasy(event.y))
+        if "control" in point_id:
+
+            self.start_x, self.start_y = closest_point(self.opencv_image_points,
+                                                       self.canvas.canvasx(event.x),
+                                                       self.canvas.canvasy(event.y), True)
+        else:
+            self.start_x, self.start_y = closest_point(self.nomogram_axes[axis_id].get_axis_scaled_points(),
+                                                       self.canvas.canvasx(event.x),
+                                                       self.canvas.canvasy(event.y))
+
         self.current_point_id = point_id
 
     def drag_point(self, event, axis_id: str, point_id: str):
-        cur_x, cur_y = closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                                     self.canvas.canvasy(event.y))
+        if "control" in point_id:
+            cur_x, cur_y = closest_point(self.opencv_image_points,
+                          self.canvas.canvasx(event.x),
+                          self.canvas.canvasy(event.y), True)
+        else:
+            cur_x, cur_y = closest_point(self.nomogram_axes[axis_id].get_axis_scaled_points(),
+                          self.canvas.canvasx(event.x),
+                          self.canvas.canvasy(event.y))
+
         if cur_x > DEFAULT_ROOT_WIDTH:
             cur_x = DEFAULT_ROOT_WIDTH
         elif cur_x < 0:
@@ -443,8 +454,14 @@ class NomogramApp:
 
     def stop_drag_point(self, event, axis_id: str, point_id: str):
         # Update the control point's position in the data structure
-        x, y = closest_point(self.opencv_image_points, self.canvas.canvasx(event.x),
-                             self.canvas.canvasy(event.y))
+        if "control" in point_id:
+            x,y = closest_point(self.opencv_image_points,
+                                         self.canvas.canvasx(event.x),
+                                         self.canvas.canvasy(event.y), True)
+        else:
+            x,y = closest_point(self.nomogram_axes[axis_id].get_axis_scaled_points(),
+                                         self.canvas.canvasx(event.x),
+                                         self.canvas.canvasy(event.y))
         point_index = int(point_id.split('_')[-1])
 
         if "control" in point_id:

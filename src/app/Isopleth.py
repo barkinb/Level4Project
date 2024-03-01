@@ -65,14 +65,15 @@ class Isopleth:
             axis_value = self.nomogram_axes[axis_id].find_axis_value_at_point([x, y])
             if self.nomogram_axes[axis_id].get_distribution() is not None:
                 probability_density = self.nomogram_axes[axis_id].get_probability_at_point(axis_value)
+                std = self.nomogram_axes[axis_id].get_standard_deviation_at_point(axis_value)
                 # Display axis value and probability density near the intersection point with tags
-                self.canvas.create_text(x + 50, y + 50, anchor="nw", fill="black",
-                                        text=f"Axis Value: {axis_value:.3f}, "
-                                             f"pdf: {probability_density:.3f}",
+                self.canvas.create_text(x + 20, y + 15, anchor="nw", fill="red",
+                                        text=f"{axis_id}: {axis_value:.3f}, "
+                                             f"pdf/pmf: {probability_density:.3f} and std: {std}",
                                         tags=("isopleth", f"axis_values_{axis_id}"))
             else:
-                self.canvas.create_text(x + 50, y + 50, anchor="nw", fill="black",
-                                        text=f"Axis Value: {axis_value:.3f}",
+                self.canvas.create_text(x + 20, y + 15, anchor="nw", fill="red",
+                                        text=f"{axis_id}:  {axis_value:.3f}",
                                         tags=("isopleth", f"axis_values_{axis_id}"))
 
     def calculate_implicit_equation(self):

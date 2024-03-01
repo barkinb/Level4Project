@@ -7,10 +7,10 @@ import sympy
 from bezier import bezier
 from scipy.optimize import least_squares, fsolve
 
-from utils.maths_functions import objective_function, fitting_function
+from utils.maths_functions import objective_function, fitting_function, standard_deviation
 from DistributionParser import parse_distribution
 
-NUMBER_OF_DETAIL = 150  # multiple of 5
+NUMBER_OF_DETAIL = 125  # multiple of 5
 DEFAULT_CURVE_WIDTH = 2
 DEFAULT_CURVE_COLOUR = "blue"
 DEFAULT_POINT_SIZE = 20
@@ -23,6 +23,7 @@ class Axis:
     def __init__(self, name: str, control_points: [], canvas: tkinter.Canvas, width: int = DEFAULT_CURVE_WIDTH,
                  colour: str = DEFAULT_CURVE_COLOUR) -> None:
 
+        self.standarddev_at_point = None
         self.probability_at_point = None
         self.axis_drawn = False
         self.distribution_function = None
@@ -115,10 +116,10 @@ class Axis:
         self.axis_equation_produced = True
         self.start_show_axis_points_canvas()
 
-    def scaled_points_midpoint(self):
+    def scaled_points_midpoint(self) -> (float, float):
         return self.scaled_points_middle
 
-    def find_axis_point(self, axis_value: float):
+    def find_axis_point(self, axis_value: float) -> (float, float):
         try:
             def equations(variables):
                 x, y = variables
@@ -140,7 +141,7 @@ class Axis:
         if self.axis_equation_produced:
             self.estimated_show_axis_points()
 
-    def axis_equation_generated(self):
+    def axis_equation_generated(self) -> bool:
         return self.axis_equation_produced
 
     def estimated_show_axis_points(self) -> None:
@@ -169,7 +170,7 @@ class Axis:
 
         self.axis_points_generated = True
 
-    def find_axis_value_at_point(self, point: []):
+    def find_axis_value_at_point(self, point: []) -> float:
         return fitting_function(self.axis_equation_coefficients,
                                 np.array(point), self.diffs)
 
@@ -206,7 +207,6 @@ class Axis:
 
                     # Use self.distribution to find the probability density/mass at that point
                     self.probability_at_point[i] = self.get_probability_at_point(axis_value)
-
                 # Find the maximum probability
                 max_probability = np.max(self.probability_at_point)
 
@@ -243,24 +243,32 @@ class Axis:
     def get_distribution(self):
         return self.distribution
 
-    def get_distribution_str(self):
+    def get_distribution_str(self) -> str:
         return self.distribution_str
 
-    def get_distribution_type(self):
+    def get_distribution_type(self) -> str:
         return self.distribution_type
 
     def get_distribution_function(self):
         return self.distribution_function
 
+    def get_axis_scaled_points(self) -> [(float, float)]:
+        return self.scaled_points
+
+    def get_distribution_mean(self) -> float:
+        return self.distribution_function.mean(*self.distribution_params)
+
     def get_distribution_params(self):
         return self.distribution_params
 
-    def get_random_point(self):
+    def get_random_point(self) -> (float, float):
         if self.distribution is not None:
             point = self.get_distribution_function().rvs(self.get_distribution_params())[0]
             return self.find_axis_point(point)
         else:
             return self.scaled_points[randint(0, len(self.scaled_points) - 1)]
 
+    def get_standard_deviation_at_point(self, axis_value: float) -> float:
+        return standard_deviation(axis_value, self.get_distribution_mean(), len(self.scaled_points))
     def get_axis_drawn(self):
         return self.axis_drawn
