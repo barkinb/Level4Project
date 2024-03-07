@@ -81,7 +81,7 @@ class NomogramApp:
         self.nomogram_axes = {}
         self.isopleths = {}
         self.create_toolbar()
-        # self.create_left_panel()
+        self.create_left_panel()
         self.distributions = 0
         self.number_isopleths = 0
         root_window.bind('<Control-l>', lambda event: self.select_image_file())
@@ -157,56 +157,49 @@ class NomogramApp:
     def create_left_panel(self):
         self.left_panel_frame = tk.Frame(self.root, bd=1, relief=tk.RAISED)
         self.left_panel_frame.pack(side=tk.LEFT, fill=tk.Y)
-        self.title = tk.Label(self.left_panel_frame, text="List of Points and Distributions")
-        self.title.pack()
+
+        # Create a canvas to hold the left panel content
         self.left_panel_canvas = tk.Canvas(self.left_panel_frame)
         self.left_panel_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        # Create a frame inside the canvas to hold the actual content
+        self.left_panel_content = tk.Frame(self.left_panel_canvas)
         self.left_panel_canvas.create_window((0, 0), window=self.left_panel_content, anchor=tk.NW)
 
-        self.scrollbar = tk.Scrollbar(self.left_panel_frame, orient=tk.VERTICAL, command=self.left_panel_canvas.yview)
-        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.left_panel_canvas.configure(yscrollcommand=self.scrollbar.set)
-        self.left_panel_content = tk.Frame(self.left_panel_canvas)
-        self.left_panel_content.bind("<Configure>", lambda event: self.on_frame_configure())
+        # Create a vertical scrollbar and link it to the canvas
+        scrollbar = tk.Scrollbar(self.left_panel_frame, orient=tk.VERTICAL, command=self.left_panel_canvas.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.left_panel_canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Update the scroll region when the left panel content changes
+        self.left_panel_content.bind("<Configure>", lambda event: self.left_panel_canvas.configure(
+            scrollregion=self.left_panel_canvas.bbox("all")))
 
     def update_left_panel_content(self):
-        self.left_panel_content = None
-        # # Iterate through each axis
-        # for axis_id, axis in self.nomogram_axes.items():
-        #     # Create a label to display the axis name
-        #     axis_label = tk.Label(self.left_panel_content, text=f"Axis ID: {axis_id}")
-        #     axis_label.pack()
-        #
-        #     # Display control points
-        #     control_points_label = tk.Label(self.left_panel_content, text="Control Points:")
-        #     control_points_label.pack()
-        #     for index, control_point in enumerate(self.control_points.get(axis_id, [])):
-        #         control_point_label = tk.Label(self.left_panel_content, text=f"Point {index + 1}: {control_point}")
-        #         control_point_label.pack()
-        #
-        #     # Display axis points
-        #     axis_points_label = tk.Label(self.left_panel_content, text="Axis Points:")
-        #     axis_points_label.pack()
-        #     for index, axis_point in enumerate(self.axis_points.get(axis_id, [])):
-        #         axis_point_label = tk.Label(self.left_panel_content, text=f"Point {index + 1}: {axis_point}")
-        #         axis_point_label.pack()
-        #
-        #     # Display distribution
-        #     distribution_label = tk.Label(self.left_panel_content, text="Distribution:")
-        #     distribution_label.pack()
-        #     distribution_text = axis.get_distribution_str()
-        #     distribution_display = tk.Label(self.left_panel_content, text=distribution_text)
-        #     distribution_display.pack()
-        #
-        #     # Add a separator between axis entries
-        #     separator = tk.Frame(self.left_panel_content, height=2, bd=1, relief=tk.SUNKEN)
-        #     separator.pack(fill=tk.X, padx=5, pady=5)
-        #
-        # # Update the canvas
-        # self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
-        # self.left_panel_canvas.pack()
-        pass
+        if self.left_panel_content:
+            self.left_panel_content.destroy()
+        self.left_panel_content = tk.Frame(self.left_panel_canvas)
+
+        # Print all axis names
+        axis_label = tk.Label(self.left_panel_content, text="Axis Names:")
+        axis_label.pack()
+        for axis_id in self.nomogram_axes.keys():
+            axis_name_label = tk.Label(self.left_panel_content, text=axis_id)
+            axis_name_label.pack()
+
+        # Print all distribution names
+        distribution_label = tk.Label(self.left_panel_content, text="Distribution Names:")
+        distribution_label.pack()
+        for axis_id, axis in self.nomogram_axes.items():
+            distribution_str = axis.get_distribution_str()
+            if distribution_str:
+                distribution_name_label = tk.Label(self.left_panel_content, text=f"{axis_id}: {distribution_str}")
+                distribution_name_label.pack()
+
+        self.left_panel_canvas.create_window((0, 0), window=self.left_panel_content, anchor=tk.NW)
+        self.left_panel_content.update_idletasks()
+        self.left_panel_content.pack()
+        self.left_panel_canvas.config(scrollregion=self.left_panel_canvas.bbox("all"))
 
     def on_frame_configure(self):
         self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
@@ -534,7 +527,7 @@ class NomogramApp:
                 self.nomogram_axes[i].draw()
                 self.nomogram_axes[i].set_axis_points(axis_points[i])
                 self.save_distribution(distributions[i])
-
+            self.update_left_panel_content()
         except Exception as e:
             print(traceback.print_exc(), f"{e}")
             messagebox.showerror("Error", str(e))
