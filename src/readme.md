@@ -10,7 +10,7 @@ instructions to run automated tests.
 ### Requirements
 
 
-* Python 3
+* Python 3.10
 * Packages: listed in `requirements.txt` 
 * Tested on macOS
 

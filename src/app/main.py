@@ -445,7 +445,7 @@ class NomogramApp:
         elif "isopleth" in point_id:
             self.isopleth_control_points[point_index] = (cur_x, cur_y)
             self.create_isopleth()
-
+        self.update_left_panel_content()
     def stop_drag_point(self, event, axis_id: str, point_id: str):
         # Update the control point's position in the data structure
         if "control" in point_id:
