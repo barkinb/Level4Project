@@ -12,6 +12,7 @@ InvalidPointAmountError: ValueError = ValueError("Invalid Amount of Points")
 
 
 class Isopleth:
+    """Creates an Isopleth from two points on two different axis and draws them on the canvas. """
     def __init__(self, control_points: [], canvas: tkinter.Canvas, nomogram_axes: {},
                  width: int = DEFAULT_LINE_WIDTH,
                  colour: str = DEFAULT_LINE_COLOUR) -> None:
@@ -36,6 +37,7 @@ class Isopleth:
         self.draw_isopleth()
 
     def draw_isopleth(self) -> None:
+        """Draws the Isopleth using the bezier package"""
         self.canvas.delete("axis_points")
         self.canvas.delete("control_points")
         self.canvas.delete("axis_values")
@@ -59,6 +61,7 @@ class Isopleth:
         self.find_intersections()
 
     def find_intersections(self):
+        """Finds the intersections of the isopleth curve with the axis and shows them on screen"""
         self.intersections = self.find_isopleth_intersections()
         for i in self.intersections:
             axis_id, x, y = i[0], i[1][0], i[1][1]
@@ -77,10 +80,11 @@ class Isopleth:
                                         tags=("isopleth", f"axis_values_{axis_id}"))
 
     def calculate_implicit_equation(self):
+        """Creates an implicit equation that can be used with a given x,y """
         return lambda x, y: self.implicit_axis_equation.subs([(self.x, x), (self.y, y)])
 
     def find_isopleth_intersections(self) -> [[str, (float, float)]]:
-
+        """Calculates the intersections of the isopleth curve with the axis"""
         intersections = []
         for axis_id, axis in self.nomogram_axes.items():
             if axis.axis_equation_generated():

@@ -3,6 +3,7 @@ import re
 from tkinter import messagebox
 
 def parse_distribution(distribution_str):
+    """Returns the name, parameters, type for a probability distribution"""
     try:
         match = re.match(r'(\w+)\((.*?)\)', distribution_str)
 
@@ -28,3 +29,6 @@ def parse_distribution(distribution_str):
     except Exception as e:
         messagebox.showerror("Error",f"Error parsing distribution_name: {e}")
 
+def return_distribution_text():
+    """Returns the name and parameters for a distribution"""
+    return ""

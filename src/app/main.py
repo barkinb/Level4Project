@@ -92,8 +92,7 @@ class NomogramApp:
         root_window.bind('<Control-n>', lambda event: self.add_new_axis_id())
 
     def create_toolbar(self):
-        # Create a frame to hold the toolbar buttons
-
+        """creates the toolbar on the top of the application"""
         toolbar_frame = tk.Frame(self.root, bd=1, relief=tk.RAISED)
 
         icon_dimension = (32, 32)
@@ -144,6 +143,7 @@ class NomogramApp:
             self.populate_axis_id_dropdown()
             self.distribution_label = tk.Label(toolbar_frame, text="Enter Distribution:")
             self.distribution_entry = tk.Entry(toolbar_frame)
+            ToolTip(self.distribution_label, )
             self.distribution_label.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.distribution_entry.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.save_distribution_button = tk.Button(toolbar_frame, text="Save Distribution",
@@ -155,39 +155,31 @@ class NomogramApp:
             print(traceback.print_exc(), f"{e}")
 
     def create_left_panel(self):
+        """A left panel to show the name of the probability distributions"""
         self.left_panel_frame = tk.Frame(self.root, bd=1, relief=tk.RAISED)
         self.left_panel_frame.pack(side=tk.LEFT, fill=tk.Y)
 
-        # Create a canvas to hold the left panel content
         self.left_panel_canvas = tk.Canvas(self.left_panel_frame)
         self.left_panel_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Create a frame inside the canvas to hold the actual content
         self.left_panel_content = tk.Frame(self.left_panel_canvas)
         self.left_panel_canvas.create_window((0, 0), window=self.left_panel_content, anchor=tk.NW)
 
-        # Create a vertical scrollbar and link it to the canvas
-        scrollbar = tk.Scrollbar(self.left_panel_frame, orient=tk.VERTICAL, command=self.left_panel_canvas.yview)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.left_panel_canvas.configure(yscrollcommand=scrollbar.set)
-
-        # Update the scroll region when the left panel content changes
         self.left_panel_content.bind("<Configure>", lambda event: self.left_panel_canvas.configure(
             scrollregion=self.left_panel_canvas.bbox("all")))
 
     def update_left_panel_content(self):
+        """updates the left panel based on new additions"""
         if self.left_panel_content:
             self.left_panel_content.destroy()
         self.left_panel_content = tk.Frame(self.left_panel_canvas)
 
-        # Print all axis names
         axis_label = tk.Label(self.left_panel_content, text="Axis Names:")
         axis_label.pack()
         for axis_id in self.nomogram_axes.keys():
             axis_name_label = tk.Label(self.left_panel_content, text=axis_id)
             axis_name_label.pack()
 
-        # Print all distribution names
         distribution_label = tk.Label(self.left_panel_content, text="Distribution Names:")
         distribution_label.pack()
         for axis_id, axis in self.nomogram_axes.items():
@@ -201,10 +193,8 @@ class NomogramApp:
         self.left_panel_content.pack()
         self.left_panel_canvas.config(scrollregion=self.left_panel_canvas.bbox("all"))
 
-    def on_frame_configure(self):
-        self.left_panel_canvas.configure(scrollregion=self.left_panel_canvas.bbox("all"))
-
     def populate_axis_id_dropdown(self):
+        """Stores the name of the axes. The selected axis name is used for the control point"""
         if self.control_points:
             self.axis_id_dropdown['menu'].delete(0, 'end')
             self.axis_id_dropdown['menu'].add_separator()
@@ -227,6 +217,7 @@ class NomogramApp:
             self.add_new_axis_id()
 
     def select_image_file(self, file_path=None):
+        """opens an image and reshapes it to fit on the canvas"""
         if file_path is None:
             self.file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png *.jpg *.jpeg")])
         else:
@@ -251,6 +242,7 @@ class NomogramApp:
             print(traceback.print_exc(), f"{e}")
 
     def display_image(self, image: Image.Image):
+        """Creates a canvas and displays the image"""
         if self.canvas:
             self.canvas = None
             self.original_img = None
@@ -264,6 +256,7 @@ class NomogramApp:
         self.canvas.image = photo
 
     def image_to_opencv(self, size):
+        """Creates OpenCV contours for images and stores them in a list"""
         self.display_image(self.original_img)
         self.opencv_image = cv2.imread(self.file_path)
         self.opencv_image = cv2.resize(self.opencv_image, size)
@@ -288,6 +281,9 @@ class NomogramApp:
         self.canvas.bind("<Button-1>", self.capture_axis_point_coordinates)
 
     def capture_bezier_coordinates(self, event):
+        """Creates a control point for the Bézier curve, and updates the existing curves if a new control point is added
+        to an already drawn Bézier curve
+        """
         axis_id = self.axis_id_variable.get()
         if axis_id == "Select axis:" or axis_id is None:
             messagebox.showerror("Error", "Please select an axis name")
@@ -317,12 +313,14 @@ class NomogramApp:
             self.canvas.unbind("<Button-1>")
 
     def capture_axis_point_coordinates(self, event):
+        """Captures the coordinates of a point on an axis and stores its value"""
         axis_id = self.axis_id_variable.get()
         if axis_id == "Select axis:" or axis_id is None:
             messagebox.showerror("Error", "Please select an axis name")
         try:
             if self.nomogram_axes[axis_id].get_axis_drawn():
-                x, y = get_closest_point(self.nomogram_axes[axis_id].get_axis_scaled_points(), self.canvas.canvasx(event.x),
+                x, y = get_closest_point(self.nomogram_axes[axis_id].get_axis_scaled_points(),
+                                         self.canvas.canvasx(event.x),
                                          self.canvas.canvasy(event.y))
                 point_value = simpledialog.askfloat("Enter Point Value", "Enter the value for the selected point:")
 
@@ -349,6 +347,7 @@ class NomogramApp:
             self.canvas.unbind("<Button-1>")
 
     def create_interactive_isopleths(self):
+        """Creates a new isopleth and binds it to the mouse"""
         self.canvas.delete("isopleth")
         self.canvas.delete("isopleth_points")
         self.isopleth_control_points = []
@@ -384,6 +383,7 @@ class NomogramApp:
         self.create_isopleth()
 
     def adjust_point(self, point_id: str, axis_id: str):
+        """Binds mouse clicks and drags to the Bézier curve, axis data point or isopleths"""
         self.canvas.tag_bind(point_id, "<Button-1>",
                              lambda event: self.start_adjust_point(event, axis_id, point_id))
         self.canvas.tag_bind(point_id, "<B1-Motion>",
@@ -392,8 +392,12 @@ class NomogramApp:
                              lambda event: self.stop_drag_point(event, axis_id, point_id))
 
     def start_adjust_point(self, event, axis_id: str, point_id: str):
-        # Record the starting position of the control point
-        # adapted from https://stackoverflow.com/questions/29789554/tkinter-draw-rectangle-using-a-mouse
+        """Record the starting position of the control point
+        adapted from https://stackoverflow.com/questions/29789554/tkinter-draw-rectangle-using-a-mouse
+        Uses proximity to the contours for the Bézier curve,or locks it to the Bézier curve if it is an isopleth control point
+        or an axis data point
+        """
+
         if "control" in point_id:
 
             self.start_x, self.start_y = get_closest_point(self.opencv_image_points,
@@ -447,7 +451,7 @@ class NomogramApp:
             self.create_isopleth()
 
     def stop_drag_point(self, event, axis_id: str, point_id: str):
-        # Update the control point's position in the data structure
+        """Updates the points when the mouse drag has stopped"""
         if "control" in point_id:
             x, y = get_closest_point(self.opencv_image_points,
                                      self.canvas.canvasx(event.x),
@@ -469,8 +473,8 @@ class NomogramApp:
         elif "isopleth" in point_id:
             self.isopleth_control_points[point_index] = (x, y)
 
-
     def draw_bezier(self, bezier_axis_id=None):
+        """Draws a new Bezier curve"""
         if bezier_axis_id is None:
             bezier_axis_id = self.axis_id_variable.get()
         if bezier_axis_id == "Select axis:":
@@ -487,12 +491,14 @@ class NomogramApp:
         self.nomogram_axes[bezier_axis_id].draw()
 
     def update_bezier(self, axis_id: str):
+        """updates the Bézier curve with new data"""
         if axis_id not in self.control_points or axis_id not in self.nomogram_axes:
             pass
         else:
             self.draw_bezier(axis_id)
 
     def save_distribution(self, distribution_text=None):
+        """Saves a probability distribution to an axis"""
         if distribution_text is None:
             distribution_text = self.distribution_entry.get()
         axis_id = self.axis_id_variable.get()
@@ -506,6 +512,7 @@ class NomogramApp:
         self.update_left_panel_content()
 
     def load_project(self):
+        """Loads a nomogram from a JSON file, the image should be in the same directory as the JSON files"""
         try:
             file_path_to_load = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
             if not file_path_to_load:
@@ -533,6 +540,7 @@ class NomogramApp:
             messagebox.showerror("Error", str(e))
 
     def save_project(self):
+        """Saves the nomogram data to a JSON file. """
         if not self.original_img:
             messagebox.showerror("Error", "No image loaded")
             return
@@ -566,6 +574,7 @@ class NomogramApp:
             messagebox.showerror("Error", f"Failed to save project: {e}")
 
     def update_points(self, axis_id: str):
+        """updates the data in the Axis class items"""
         for i in self.nomogram_axes.keys():
             if self.nomogram_axes[i].axis_equation_produced:
                 self.number_of_complete_axis += 1
@@ -576,24 +585,13 @@ class NomogramApp:
                 self.nomogram_axes[axis_id].set_control_points(self.control_points[axis_id])
 
     def create_isopleth(self):
-
+        """creates the isopleth"""
         try:
             self.isopleth = Isopleth(self.isopleth_control_points, self.canvas,
                                      self.nomogram_axes)
 
         except Exception as e:
             print(traceback.print_exc(), f"{e}")
-
-    def delete_point(self, axis_id, point_id):
-        point_index = int(point_id.split('_')[-1])
-        self.canvas.delete(point_id)
-        if "control" in point_id:
-            self.control_points[axis_id].pop(point_index)
-            self.update_bezier(axis_id)
-        elif "axis" in point_id:
-            self.axis_points[axis_id].pop(point_index)
-        self.update_points(axis_id)
-        self.canvas.unbind("<BackSpace>")
 
 
 if __name__ == "__main__":
