@@ -437,7 +437,7 @@ class NomogramApp:
             # Update the control point's position in the data structure
             self.control_points[axis_id][point_index] = (cur_x, cur_y)
             self.update_bezier(axis_id)
-
+            self.update_left_panel_content()
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (cur_x, cur_y, self.axis_points[axis_id][point_index][-1])
             self.axis_points[axis_id].sort(key=lambda el: el[2])
@@ -445,7 +445,7 @@ class NomogramApp:
         elif "isopleth" in point_id:
             self.isopleth_control_points[point_index] = (cur_x, cur_y)
             self.create_isopleth()
-        self.update_left_panel_content()
+
     def stop_drag_point(self, event, axis_id: str, point_id: str):
         # Update the control point's position in the data structure
         if "control" in point_id:
@@ -468,7 +468,7 @@ class NomogramApp:
             self.update_points(axis_id)
         elif "isopleth" in point_id:
             self.isopleth_control_points[point_index] = (x, y)
-        self.update_left_panel_content()
+
 
     def draw_bezier(self, bezier_axis_id=None):
         if bezier_axis_id is None:
@@ -587,7 +587,6 @@ class NomogramApp:
     def delete_point(self, axis_id, point_id):
         point_index = int(point_id.split('_')[-1])
         self.canvas.delete(point_id)
-        print(point_id)
         if "control" in point_id:
             self.control_points[axis_id].pop(point_index)
             self.update_bezier(axis_id)
