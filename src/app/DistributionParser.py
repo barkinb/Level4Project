@@ -1,6 +1,7 @@
-import scipy.stats as stats
 import re
-from tkinter import messagebox
+
+import scipy.stats as stats
+
 
 def parse_distribution(distribution_str):
     """Returns the name, parameters, type for a probability distribution"""
@@ -27,8 +28,46 @@ def parse_distribution(distribution_str):
         return distribution_functions[dist_type]
 
     except Exception as e:
-        messagebox.showerror("Error",f"Error parsing distribution_name: {e}")
+        return e
 
-def return_distribution_text():
+def get_distribution_text() -> str:
     """Returns the name and parameters for a distribution"""
-    return ""
+    return '''Enter None to remove the statistical distributions for this axis.
+    Please select an Axis of your choosing and enter a probability distribution from the following:
+
+    * Normal Distribution (scipy.stats.norm):
+        * Parameters: mean (loc), standard deviation (scale)
+        * Enter as: Normal(loc, scale)
+    * Uniform Distribution (scipy.stats.uniform):
+        * Parameters: lower boundary (loc), upper boundary (scale)
+        * Enter as: Uniform(loc, scale)
+    * Poisson Distribution (scipy.stats.poisson):
+        * Parameter: rate (μ)
+        * Enter as: Poisson(μ)
+    * Student's t Distribution (scipy.stats.t):
+        * Parameters: degrees of freedom (df)
+        * Enter as: t(df)
+    * Exponential Distribution (scipy.stats.expon):
+        * Parameter: rate (scale)
+        * Enter as: Exponential(scale)
+    * Gamma Distribution (scipy.stats.gamma):
+        * Parameters: shape (a), scale (scale)
+        * Enter as: Gamma(a, scale)
+    * Beta Distribution (scipy.stats.beta):
+        * Parameters: shape parameter α (a), shape parameter β (b)
+        * Enter as: Beta(a, b)
+    * Binomial Distribution (scipy.stats.binom):
+        * Parameters: number of trials (n), probability of success (p)
+        * Enter as: Binomial(n, p)
+    * Geometric Distribution (scipy.stats.geom):
+        * Parameter: probability of success (p)
+        * Enter as: Geometric(p)
+    * Logistic Distribution (scipy.stats.logistic):
+        * Parameters: location (loc), scale (scale)
+        * Enter as: Logistic(loc, scale)
+    * Negative Binomial Distribution (scipy.stats.nbinom):
+        * Parameters: number of successes (r), probability of success (p)
+        * Enter as: NegativeBinomial(r, p)
+    * Uniform Discrete Distribution:
+        * Parameters: lower boundary (a), upper boundary (b)
+        * Enter as: UniformDiscrete(a, b)'''

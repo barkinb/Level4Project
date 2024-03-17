@@ -10,8 +10,8 @@ def fitting_function(coefficients, xy, diffs) -> float:
     if np.allclose(diffs, diffs[0]):  # Linear fitting
         return a0 + a1 * x + a2 * y
 
-    if np.any(diffs != 0) and np.any(diffs[0] != 0):
-        if np.allclose(np.log(diffs), np.log(diffs[0])):  # Logarithmic fitting
+    if np.any(diffs != 0) and np.any(diffs[0] != 0):  # Logarithmic fitting
+        if np.allclose(np.log(diffs), np.log(diffs[0])):
             return a0 + a1 * np.log(x) + a2 * np.log(y)
 
     # Third-order implicit fitting (otherwise)

@@ -32,15 +32,14 @@ Same as week 5
 
 ## Spring Semester
 
-* **Week 13**
-* **Week 14**
-* **Week 15**
-* **Week 16**
-* **Week 17**
-* **Week 19**
-* **Week 20**
-* **Week 21**
-* **Week 22**
-* **Week 23 [TERM ENDS]**
-* **Week 24** Dissertation submission deadline and presentations.
+* **Week 13** Deliverable: Draft submission of Introduction and Background
+* **Week 14-5**Deliverable: Draft submission of Introduction and Background
+* **Week 16-7**Constructing interactive visualisations through rays Deliverable: Draft submission of Design
+* **Week 19**Evaluation and analysis through user testing Deliverable: Mostly finished product
+* **Week 20-1**Final changes Deliverable: Draft submission of Evaluation
+* **Week 22-23**Final write-up and improvements Deliverable: Conclusion and Final submission
 
+
+Week 6-7 - Evaluation and analysis through user testing Deliverable: Mostly finished product
+• Week 8-9 - Final changes Deliverable: Draft submission of Evaluation
+• Week 10-11 - Final write-up and improvements Deliverable: Conclusion and Final submission

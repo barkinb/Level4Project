@@ -1,4 +1,5 @@
 import tkinter
+
 import numpy as np
 import sympy
 from bezier import bezier
@@ -58,9 +59,9 @@ class Isopleth:
         self.line = self.canvas.create_line(*sum(self.scaled_points, ()), width=self.line_width,
                                             fill=self.line_colour, tags="isopleth")
 
-        self.find_intersections()
+        self.show_intersections()
 
-    def find_intersections(self):
+    def show_intersections(self):
         """Finds the intersections of the isopleth curve with the axis and shows them on screen"""
         self.intersections = self.find_isopleth_intersections()
         for i in self.intersections:

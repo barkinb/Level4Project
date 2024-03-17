@@ -1,12 +1,8 @@
 # Readme
 
-Put a brief description of your code here. This should at least describe the file structure.
-
 ## Build instructions
 
-**You must** include the instructions necessary to build and deploy this project successfully. If appropriate, also include 
-instructions to run automated tests. 
-
+User manual can be found in manual.md .
 ### Requirements
 
 
@@ -17,7 +13,10 @@ instructions to run automated tests.
 
 ### Build steps
 
-python3 axisDetection.py
+#### From the terminal/shell:
+1) pip install -r requirements.txt
+2) cd src/app
+3) python3 main.py
 
 
 ### Test steps
