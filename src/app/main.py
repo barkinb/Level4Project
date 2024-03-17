@@ -1,16 +1,18 @@
 import json
 import os
 import tkinter as tk
+import traceback
 from tkinter import filedialog, messagebox, simpledialog
 
-import numpy
-from tktooltip import ToolTip
-from PIL import Image, ImageTk
-import traceback
 import cv2
+import numpy
+from PIL import Image, ImageTk
+from tktooltip import ToolTip
+
+from DistributionParser import get_distribution_text
+from Isopleth import Isopleth
 from NomogramAxis import Axis
 from utils.maths_functions import get_closest_point
-from Isopleth import Isopleth
 
 DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT = 1250, 800
 DEFAULT_CANVAS_IMAGE_OFFSET = 25
@@ -143,7 +145,7 @@ class NomogramApp:
             self.populate_axis_id_dropdown()
             self.distribution_label = tk.Label(toolbar_frame, text="Enter Distribution:")
             self.distribution_entry = tk.Entry(toolbar_frame)
-            ToolTip(self.distribution_label, )
+            ToolTip(self.distribution_entry, msg=get_distribution_text())
             self.distribution_label.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.distribution_entry.pack(side=tk.LEFT, padx=2, pady=2, fill=tk.X)
             self.save_distribution_button = tk.Button(toolbar_frame, text="Save Distribution",
@@ -228,15 +230,15 @@ class NomogramApp:
                 canvas_width, canvas_height = DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT
                 img_width, img_height = self.original_img.size
                 aspect_ratio = img_width / img_height
-                if img_width > canvas_width or img_height > canvas_height:
-                    if canvas_width / aspect_ratio > canvas_height:
-                        new_width = int(canvas_height * aspect_ratio)
-                        new_height = canvas_height
-                    else:
-                        new_width = canvas_width
-                        new_height = int(canvas_width / aspect_ratio)
-                    self.original_img = self.original_img.resize((new_width, new_height), Image.LANCZOS)
-                    self.image_to_opencv((new_width, new_height))
+
+                if canvas_width / aspect_ratio > canvas_height:
+                    new_width = int(canvas_height * aspect_ratio)
+                    new_height = canvas_height
+                else:
+                    new_width = canvas_width
+                    new_height = int(canvas_width / aspect_ratio)
+                self.original_img = self.original_img.resize((new_width, new_height), Image.LANCZOS)
+                self.image_to_opencv((new_width, new_height))
 
         except Exception as e:
             print(traceback.print_exc(), f"{e}")

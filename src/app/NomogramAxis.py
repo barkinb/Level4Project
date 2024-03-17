@@ -2,13 +2,14 @@ import tkinter
 import traceback
 from random import randint
 from tkinter import messagebox
+
 import numpy as np
 import sympy
 from bezier import bezier
 from scipy.optimize import least_squares, fsolve
 
-from utils.maths_functions import objective_function, fitting_function, standard_deviation
 from DistributionParser import parse_distribution
+from utils.maths_functions import objective_function, fitting_function, standard_deviation
 
 NUMBER_OF_DETAIL = 125  # multiple of 5
 DEFAULT_CURVE_WIDTH = 2
@@ -190,6 +191,7 @@ class Axis:
             self.distribution_params = None
             self.distribution_function = None
             self.canvas.delete(f"statistics_points_{self.name}")
+            return
         if self.axis_points_generated:
             try:
 
@@ -230,10 +232,9 @@ class Axis:
                     # Create the oval on the canvas
                     self.canvas.create_oval(x1, y1, x2, y2, fill=self.curve_colour, outline=self.curve_colour,
                                             width=self.curve_width, tags=f"statistics_points_{self.name}")
+            except Exception:
+                messagebox.showerror(title="Error", message="Could not parse the distribution. Please try again.")
 
-            except Exception as e:
-                print(traceback.print_exc())
-                messagebox.showerror("Error", f"Error adding distribution: {e}")
             if self.distribution is not None:
                 self.canvas.delete(f"axis_points_{self.name}")
                 self.canvas.delete(f"control_points_{self.name}")
