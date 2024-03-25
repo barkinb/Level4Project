@@ -307,7 +307,6 @@ class NomogramApp:
 
             # Bind events only for the newly created control point
             self.adjust_point(control_point_id, axis_id)
-            self.update_left_panel_content()
             if axis_id in self.nomogram_axes:  # if there is already a Bézier curve
                 self.draw_bezier(axis_id)
                 self.update_points(axis_id)
@@ -342,7 +341,6 @@ class NomogramApp:
                         tags=(axis_point_id, "axis_points", f"axis_points_{axis_id}")
                     )
                     self.adjust_point(axis_point_id, axis_id)
-                    self.update_left_panel_content()
                     self.update_points(axis_id)
 
         finally:
@@ -443,7 +441,6 @@ class NomogramApp:
             # Update the control point's position in the data structure
             self.control_points[axis_id][point_index] = (cur_x, cur_y)
             self.update_bezier(axis_id)
-            self.update_left_panel_content()
         elif "axis" in point_id:
             self.axis_points[axis_id][point_index] = (cur_x, cur_y, self.axis_points[axis_id][point_index][-1])
             self.axis_points[axis_id].sort(key=lambda el: el[2])
