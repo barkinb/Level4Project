@@ -131,7 +131,7 @@ class Axis:
                 implicit_value = self.calculate_implicit_equation()(x, y)
                 return np.array([curve_value - axis_value, implicit_value], dtype='float64')
 
-            initial_guess = np.array([0, 0], dtype='float64')
+            initial_guess = np.array([self.get_random_point()[0], self.get_random_point()[1]])
             solution = fsolve(equations, initial_guess)
             return solution[0], solution[1]
 
