@@ -17,7 +17,7 @@ Example: BMI nomogram
 
 Please repeat steps 1-4 for every axis' on the nomogram. 
 
-The finished version should look like this: https://lists.office.com/Images/6e725c29-763a-4f50-81f2-2e254f0133c8/78af8b25-4c76-4920-8022-272796441d2b/T28SUMVLXUEXCYFPMI8DP28XOT/51269f75-c4f4-4cf4-bb33-06e453efb435
+The finished version should look like this: https://    lists.office.com/Images/6e725c29-763a-4f50-81f2-2e254f0133c8/78af8b25-4c76-4920-8022-272796441d2b/T28SUMVLXUEXCYFPMI8DP28XOT/51269f75-c4f4-4cf4-bb33-06e453efb435
 
 For height, please insert a normal distribution by typing Normal(175,7.5) into the text field, ensuring that you have the height axis selected. Then press 'Save Distribution'. 
 
