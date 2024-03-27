@@ -6,7 +6,8 @@ from tkinter import messagebox
 import numpy as np
 import sympy
 from bezier import bezier
-from scipy.optimize import least_squares, fsolve
+from scipy.optimize import least_squares
+from scipy.stats import linregress
 
 from DistributionParser import parse_distribution
 from utils.maths_functions import objective_function, fitting_function, standard_deviation
@@ -104,16 +105,28 @@ class Axis:
 
     def fit_axis_equation(self):
         """Calculates the equation for an axis between the coordinates and the value of the variable"""
-        self.initial_guess = [0.0] * 8
+
         self.xy_values = np.array([(point[0], point[1]) for point in self.axis_points], dtype='float64')
         self.axis_values = np.array([point[2] for point in self.axis_points], dtype='float64')
-        self.diffs = np.diff(self.axis_values)
+        self.xy_values_distance = np.linalg.norm(np.diff(self.xy_values, axis=0), axis=1)
+        self.axis_values_diffs = np.diff(self.axis_values)
+        self.axis_equation_coefficients = [0] * 8
+        if np.allclose(self.xy_values_distance, 0) and not np.allclose(self.axis_values_diffs, 0):
+            slope, intercept = linregress(self.xy_values[:, 0], self.axis_values)[0:2]
+            self.axis_equation_coefficients[0:2] = [slope, intercept]
+        elif not np.allclose(self.xy_values_distance, 0) and np.allclose(self.axis_values_diffs, 0):
+            self.axis_equation_type = "log"
+            result = least_squares(objective_function, self.axis_equation_coefficients,
+                                   args=(self.xy_values, self.axis_values, self.axis_equation_type))
 
-        result = least_squares(objective_function, self.initial_guess,
-                               args=(self.xy_values, self.axis_values, self.diffs))
+            self.axis_equation_coefficients = result.x
 
-        popt = result.x
-        self.axis_equation_coefficients = popt
+        else:
+            self.axis_equation_type = "pol"
+            result = least_squares(objective_function, self.axis_equation_coefficients,
+                                   args=(self.xy_values, self.axis_values, self.axis_equation_type))
+
+            self.axis_equation_coefficients = result.x
         self.axis_equation_produced = True
         self.start_show_axis_points_canvas()
 
@@ -129,12 +142,12 @@ class Axis:
                 curve_value = fitting_function(self.axis_equation_coefficients, np.array([x, y]),
                                                self.diffs)
                 implicit_value = self.calculate_implicit_equation()(x, y)
-                return np.array([curve_value - axis_value, implicit_value], dtype='float64')
+                return np.array([(curve_value - axis_value) ** 2, implicit_value ** 2], dtype='float64')
 
-            initial_guess = np.array([self.get_random_point()[0], self.get_random_point()[1]])
-            solution = fsolve(equations, initial_guess)
-            return solution[0], solution[1]
-
+            initial_guess = np.array([self.scaled_points_middle[0], self.scaled_points_middle[1]], dtype='float64')
+            bounds = ((0, 0), (1500, 1000))
+            solution = least_squares(equations, initial_guess, bounds=bounds)
+            return solution.x
         except TypeError:
             print(traceback.print_last())
 

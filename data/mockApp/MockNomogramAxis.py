@@ -2,13 +2,12 @@ import traceback
 from random import randint
 from tkinter import messagebox
 
-import numpy as np
 import sympy
+from DistributionParser import parse_distribution
 from bezier import bezier
-from scipy.optimize import least_squares, fsolve
-
-from ..DistributionParser import parse_distribution
-from ..utils.maths_functions import objective_function, fitting_function, standard_deviation
+from maths_functions import *
+from scipy.optimize import least_squares
+from scipy.stats import linregress
 
 NUMBER_OF_DETAIL = 125  # multiple of 5
 DEFAULT_CURVE_WIDTH = 2
@@ -56,7 +55,6 @@ class Axis:
         self.control_points = control_points
         self.no_points = len(self.control_points)
         self.canvas = None
-
         self.curve = None
         self.scaled_points_middle = None
         self.scaled_points_array = None
@@ -64,10 +62,10 @@ class Axis:
     def draw(self) -> bool:
         """Draws a Bezier curve on tne canvas using the bezier package"""
         if 0 < len(self.control_points) < 2:
-            self.canvas.delete(self.curve)
+            pass
         if len(self.control_points) >= 2:
             if self.curve is not None:
-                self.canvas.delete(self.curve)
+                pass
 
             x_coordinates, y_coordinates = zip(*self.control_points)
             fortran_array = np.asfortranarray([x_coordinates, y_coordinates])
@@ -76,9 +74,12 @@ class Axis:
             points = self.curve_points.evaluate_multi(parameters)
             self.scaled_points = [(points[0][i], points[1][i]) for i in range(len(points[0]))]
             self.scaled_points_array = np.array(self.scaled_points, dtype='float64')
-            self.scaled_points_middle = np.mean(self.scaled_points_array, axis=0)
+            self.scaled_points_middle = np.mean(self.scaled_points_array, axis=0, dtype='float64')
             self.scaled_points_middle = (self.scaled_points_middle[0], self.scaled_points_middle[1])
             self.implicit_axis_equation = self.curve_points.implicitize()
+            # self.curve = self.canvas.create_line(*sum(self.scaled_points, ()), width=self.curve_width,
+            #                                      fill=self.curve_colour,
+            #                                      tags=("bezier_curve", f"bezier_axis_curve_{self.name}"))
             self.axis_drawn = True
             return True
         else:
@@ -99,18 +100,31 @@ class Axis:
         """Creates an implicit equation that can be used with a given x,y """
         return lambda x, y: self.implicit_axis_equation.subs([(self.x, x), (self.y, y)])
 
+
     def fit_axis_equation(self):
         """Calculates the equation for an axis between the coordinates and the value of the variable"""
-        self.initial_guess = [0.0] * 8
+
         self.xy_values = np.array([(point[0], point[1]) for point in self.axis_points], dtype='float64')
         self.axis_values = np.array([point[2] for point in self.axis_points], dtype='float64')
-        self.diffs = np.diff(self.axis_values)
+        self.xy_values_distance = np.linalg.norm(np.diff(self.xy_values, axis=0), axis=1)
+        self.axis_values_diffs = np.diff(self.axis_values)
+        self.axis_equation_coefficients = [0] * 8
+        if np.allclose(self.xy_values_distance, 0) and not np.allclose(self.axis_values_diffs, 0):
+            slope, intercept = linregress(self.xy_values[:, 0], self.axis_values)[0:2]
+            self.axis_equation_coefficients[0:2] = [slope, intercept]
+        elif not np.allclose(self.xy_values_distance, 0) and np.allclose(self.axis_values_diffs, 0):
+            self.axis_equation_type = "log"
+            result = least_squares(objective_function, self.axis_equation_coefficients, args=(self.xy_values, self.axis_values, self.axis_equation_type))
 
-        result = least_squares(objective_function, self.initial_guess,
-                               args=(self.xy_values, self.axis_values, self.diffs))
+            self.axis_equation_coefficients = result.x
 
-        popt = result.x
-        self.axis_equation_coefficients = popt
+        else:
+            self.axis_equation_type = "pol"
+            result = least_squares(objective_function, self.axis_equation_coefficients,
+                                   args=(self.xy_values, self.axis_values, self.axis_equation_type))
+
+            self.axis_equation_coefficients = result.x
+        print(self.axis_equation_coefficients)
         self.axis_equation_produced = True
         self.start_show_axis_points_canvas()
 
@@ -119,21 +133,24 @@ class Axis:
 
     def find_axis_point(self, axis_value: float) -> (float, float):
         """Calculates the coordinate of a point in the axis for a given value"""
+        global solution
         try:
+
             def equations(variables):
                 x, y = variables
                 # Evaluate the curve value and implicit value
                 curve_value = fitting_function(self.axis_equation_coefficients, np.array([x, y]),
                                                self.diffs)
                 implicit_value = self.calculate_implicit_equation()(x, y)
-                return np.array([curve_value - axis_value, implicit_value], dtype='float64')
+                return np.array([(curve_value - axis_value)**2, implicit_value**2], dtype='float64')
 
-            initial_guess = np.array([0, 0], dtype='float64')
-            solution = fsolve(equations, initial_guess)
-            return solution[0], solution[1]
-
+            initial_guess = np.array([self.scaled_points_middle[0],self.scaled_points_middle[1]], dtype='float64')
+            bounds = ((0,0), (1500,1000))
+            solution = least_squares(equations, initial_guess, bounds=bounds)
+            return solution.x
         except TypeError:
             print(traceback.print_last())
+
 
     def start_show_axis_points_canvas(self) -> None:
         """if the equation has been produced, shows the estimation for 5 points on the axis"""
@@ -145,7 +162,12 @@ class Axis:
         return self.axis_equation_produced
 
     def estimated_show_axis_points(self) -> None:
-        pass
+        """Deleted the current estimations and reproduces them"""
+        if self.axis_points_generated:
+            pass
+            self.canvas.delete(f"axis_values_{self.name}")
+        if len(self.axis_points) > 2:
+            self.draw_estimated_axis_points()
 
     def draw_estimated_axis_points(self):
         """calculates and draws the estimation for 5 points on the axis"""
@@ -158,13 +180,19 @@ class Axis:
             # Display the axis value next to the point
             text_x = x_float + 5
             text_y = y_float - 5
+            #
+            # self.canvas.create_oval(x_float - 2.5, y_float - 2.5, x_float + 2.5, y_float + 2.5, fill="green",
+            #                         outline="orange", tags=("axis_values", f"axis_values_{self.name}"))
+            # self.canvas.create_text(text_x, text_y, anchor="nw",
+            #                         text=f"Estimate {axis_value:.3f}", fill="black",
+            #                         tags=("axis_values", f"axis_values_{self.name}"))
 
         self.axis_points_generated = True
 
     def find_axis_value_at_point(self, point: []) -> float:
         """Finds the value of the axis at the given point"""
         return fitting_function(self.axis_equation_coefficients,
-                                np.array(point), self.diffs)
+                                np.array(point), self.axis_equation_type)
 
     def add_distribution(self, distribution_str: str):
         """Adds a distribution from a string to the axis and draws it"""
@@ -177,12 +205,13 @@ class Axis:
             self.distribution_type = None
             self.distribution_params = None
             self.distribution_function = None
-            self.canvas.delete(f"statistics_points_{self.name}")
+            # self.canvas.delete(f"statistics_points_{self.name}")
             return
         if self.axis_points_generated:
             try:
 
                 if self.distribution is not None:
+                    pass
                     self.canvas.delete(f"statistics_points_{self.name}")
                 self.distribution = parse_distribution(distribution_str)
                 self.distribution_str = distribution_str
@@ -268,3 +297,4 @@ class Axis:
 
     def get_axis_drawn(self) -> bool:
         return self.axis_drawn
+

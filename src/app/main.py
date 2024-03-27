@@ -433,6 +433,7 @@ class NomogramApp:
 
         # Move the control point and update the starting position
         self.canvas.move(point_id, delta_x, delta_y)
+
         self.start_x = cur_x
         self.start_y = cur_y
 
@@ -585,6 +586,7 @@ class NomogramApp:
 
     def create_isopleth(self):
         """creates the isopleth"""
+
         try:
             self.isopleth = Isopleth(self.isopleth_control_points, self.canvas,
                                      self.nomogram_axes)
