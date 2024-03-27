@@ -27,8 +27,7 @@ jobs:
       run : pip install pynguin
 
     - name: export danger_aware
-      run : export PYNGUIN_DANGER_AWARE=x
-            PYNGUIN_DANGER_AWARE=x
+      run : echo "export PYNGUIN_DANGER_AWARE=3" >> $GITHUB_ENV
 
     - name: create test directory
       run : mkdir /tmp/pynguin-results
