@@ -37,18 +37,22 @@ jobs:
             --project-path ./src/app \
             --output-path /tmp/pynguin-results \
             --module-name main
+    - name: create and run pynguin unit tests DistributionParser
       run : pynguin \
             --project-path ./src/app \
             --output-path /tmp/pynguin-results \
             --module-name DistributionParser
+    - name: create and run pynguin unit tests Isopleth
       run : pynguin \
             --project-path ./src/app \
             --output-path /tmp/pynguin-results \
             --module-name Isopleth
+    - name: create and run pynguin unit tests NomogramAxis
       run : pynguin \
             --project-path ./src/app \
             --output-path /tmp/pynguin-results \
             --module-name NomogramAxis
+    - name: create and run pynguin unit maths_functions
       run : pynguin \
             --project-path ./src/app/utils \
             --output-path /tmp/pynguin-results \
