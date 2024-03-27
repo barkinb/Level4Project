@@ -26,7 +26,7 @@ jobs:
     - name : make pynguin tests
       run : pip install pynguin
             export PYNGUIN_DANGER_AWARE=3
-            mkdir -p /tmp/pynguin-results
+            mkdir /tmp/pynguin-results
             pynguin \
             --project-path ./src/app \
             --output-path /tmp/pynguin-results \
