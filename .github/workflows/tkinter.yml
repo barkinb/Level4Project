@@ -33,8 +33,7 @@ jobs:
       run : mkdir /tmp/pynguin-results
             
     - name: create and run pynguin unit tests
-      run : mkdir /tmp/pynguin-results
-            pynguin \
+      run : pynguin \
             --project-path ./src/app \
             --output-path /tmp/pynguin-results \
             --module-name main
