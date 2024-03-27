@@ -23,7 +23,4 @@ jobs:
     - name: Install Xvfb
       run: sudo apt-get update && sudo apt-get install -y xvfb
 
-    - name: PyInstaller Windows
-      uses: JackMcKew/pyinstaller-action-windows@python3-10-pyinstaller-5-3
-      with:
-        path: src
+    
