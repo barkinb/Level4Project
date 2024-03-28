@@ -100,11 +100,11 @@ class NomogramApp:
         icon_dimension = (32, 32)
 
         try:
-            self.select_nomogram_img = Image.open("icons/select_nomogram.png").resize(icon_dimension)
-            self.control_point_img = Image.open("icons/bezier-tool.png").resize(icon_dimension)
-            self.bezier_img = Image.open("icons/draw_bezier.png").resize(icon_dimension)
-            self.axis_entry_img = Image.open("icons/bezier-axis_entry.png").resize(icon_dimension)
-            self.isopleth_img = Image.open("icons/isopleth.png").resize(icon_dimension)
+            self.select_nomogram_img = Image.open(os.path.join("icons", "select_nomogram.png")).resize(icon_dimension)
+            self.control_point_img = Image.open(os.path.join("icons", "bezier-tool.png")).resize(icon_dimension)
+            self.bezier_img = Image.open(os.path.join("icons", "draw_bezier.png")).resize(icon_dimension)
+            self.axis_entry_img = Image.open(os.path.join("icons", "bezier-axis_entry.png")).resize(icon_dimension)
+            self.isopleth_img = Image.open(os.path.join("icons", "isopleth.png")).resize(icon_dimension)
 
             self.select_icon = ImageTk.PhotoImage(self.select_nomogram_img)
             self.control_point_icon = ImageTk.PhotoImage(self.control_point_img)

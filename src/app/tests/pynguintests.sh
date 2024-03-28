@@ -8,12 +8,6 @@ pip install pynguin
 # Create test directory
 mkdir /tmp/pynguin-results
 
-# Run Pynguin unit tests for main module
-pynguin \
---project-path .. \
---output-path /tmp/pynguin-results \
---module-name main
-
 # Run Pynguin unit tests for DistributionParser module
 pynguin \
 --project-path .. \
@@ -37,3 +31,9 @@ pynguin \
 --project-path ../utils \
 --output-path /tmp/pynguin-results \
 --module-name maths_functions
+
+# Run Pynguin unit tests for main module
+pynguin \
+--project-path .. \
+--output-path /tmp/pynguin-results \
+--module-name main

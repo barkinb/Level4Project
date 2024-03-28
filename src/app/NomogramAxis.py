@@ -190,7 +190,7 @@ class Axis:
     def find_axis_value_at_point(self, point: []) -> float:
         """Finds the value of the axis at the given point"""
         return fitting_function(self.axis_equation_coefficients,
-                                np.array(point), self.diffs)
+                                np.array(point), self.axis_equation_type)
 
     def add_distribution(self, distribution_str: str):
         """Adds a distribution from a string to the axis and draws it"""
