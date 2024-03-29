@@ -1,0 +1,1 @@
+match = re.match(r'(\w+)\((.*?)\)', distribution_str)

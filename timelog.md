@@ -410,8 +410,30 @@
 ### 15.03.2024
 * *2 hrs* implementation write up
 * *1 hrs* meeting + notes after
+* *2 hrs* adding notes to overleaf and finding areas to improve 
 * *.5 hrs* final transcripts uploaded to moodle and saved.
 
 ### 16.03.2024
 * *1hrs* adding docstrings
 * *7hrs* working on the dissertation
+
+### 17.03.2024
+* *6 hrs* working on the dissertation
+
+### 18.03.2024
+* *1hrs* producing a class diagram
+* *6 hrs* working on the dissertation
+
+### 18.03.2024
+**8 hrs* working on dissertation 
+### 19.03.2024
+**8 hrs* working on dissertation 
+### 20.03.2024
+**8 hrs* working on quantitative evaluation 
+### 21.03.2024
+**8 hrs* working on dissertation 
+### 22.03.2024
+**4 hrs* working on github
+
+**2 hrs* working on presentation
+

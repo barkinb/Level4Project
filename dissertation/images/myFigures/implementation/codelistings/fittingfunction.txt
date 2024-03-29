@@ -1,0 +1,46 @@
+def fit_axis_equation(self):
+        """Calculates the equation for an axis between the coordinates and the value of the variable"""
+
+        self.xy_values = np.array([(point[0], point[1]) for point in self.axis_points], dtype='float64') #This stores the xy coordinates. 
+        self.axis_values = np.array([point[2] for point in self.axis_points], dtype='float64') #The axis value at each coordinate. 
+        self.xy_values_distance = np.linalg.norm(np.diff(self.xy_values, axis=0), axis=1) #The difference in distance between each point
+        self.axis_values_diffs = np.diff(self.axis_values) #The discrete difference in axis value between each point
+        self.axis_equation_coefficients = [0] * 8
+        if np.allclose(self.xy_values_distance, 0) and not np.allclose(self.axis_values_diffs, 0): #If the coordinates and axis values have a constant slope
+            slope, intercept = linregress(self.xy_values[:, 0], self.axis_values)[0:2] #Finds the coefficients of the linear fitting
+            self.axis_equation_coefficients[0:2] = [slope, intercept]
+        elif not np.allclose(self.xy_values_distance, 0) and np.allclose(self.axis_values_diffs, 0): #If the coordinates and axis values have a logarithmic slope
+            self.axis_equation_type = "log"
+            result = least_squares(objective_function, self.axis_equation_coefficients,
+                                   args=(self.xy_values, self.axis_values, self.axis_equation_type)) #Finds the coefficients of the nonlinear fitting
+            
+            self.axis_equation_coefficients = result.x
+
+        else:
+            self.axis_equation_type = "pol" #Assumes a polynomial fitting otherwise
+            result = least_squares(objective_function, self.axis_equation_coefficients,
+                                   args=(self.xy_values, self.axis_values, self.axis_equation_type))
+
+            self.axis_equation_coefficients = result.x
+        self.axis_equation_produced = True
+        self.start_show_axis_points_canvas()
+
+def fitting_function(coefficients, xy, eq_type):
+    """Calculates the fitting at a point"""
+    x,y = xy.T
+    a0, a1, a2, a3, a4, a5, a6, a7 = coefficients
+    if eq_type == 'lin':
+        return a0 * x + a1 * y + a2
+    if eq_type == 'log':
+        return a0 * np.log(x) + a1 * np.log(y) + a2
+    else:
+        return (a0 * x ** 3 + a1 * x ** 2 * y + a2 * x * y ** 2 + a3 * y ** 3 +
+                a4 * x ** 2 + a5 * x * y + a6 * y ** 2 + a7)
+
+def objective_function(coefficients, xy_values, axis_values, eq_type):
+    """Objective function for a given set of points and the inaccuracy in the
+    calculated value and the true value on
+    the nomogram."""
+    errors = axis_values - fitting_function(coefficients, xy_values, eq_type)
+    return errors
+
